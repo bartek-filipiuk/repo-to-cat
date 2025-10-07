@@ -14,12 +14,12 @@ Following the incremental development principles from `DEVELOPMENT_RULES.md`, th
 
 ## Stage 1: Project Setup & Infrastructure ⚙️
 
-### 1.1 Basic Project Structure
-- [ ] Create directory structure as defined in PRD.md
-- [ ] Initialize Python project with `requirements.txt`
-- [ ] Create `.env.example` file with all required environment variables
-- [ ] Create `.gitignore` (include `.env`, `generated_images/`, `__pycache__/`)
-- [ ] Create basic `README.md` with setup instructions
+### 1.1 Basic Project Structure ✅
+- [x] Create directory structure as defined in PRD.md
+- [x] Initialize Python project with `requirements.txt`
+- [x] Create `.env.example` file with all required environment variables
+- [x] Create `.gitignore` (include `.env`, `generated_images/`, `__pycache__/`)
+- [x] Create basic `README.md` with setup instructions
 
 ### 1.2 Docker & Database Setup
 - [ ] Create `Dockerfile` for Python app
@@ -32,7 +32,7 @@ Following the incremental development principles from `DEVELOPMENT_RULES.md`, th
 
 ### 1.3 FastAPI Skeleton
 - [ ] Create `app/main.py` with basic FastAPI app
-- [ ] Create `app/core/config.py` for environment configuration
+- [x] Create `app/core/config.py` for environment configuration (completed in 1.1)
 - [ ] Create `app/core/database.py` for SQLAlchemy setup
 - [ ] Add CORS middleware configuration
 - [ ] Test FastAPI server startup (`uvicorn app.main:app --reload`)
