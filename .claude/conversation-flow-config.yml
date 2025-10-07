@@ -1,0 +1,22 @@
+# Conversation Flow Configuration
+# Simple and focused - no fluff
+
+# ==============================================================================
+# OUTPUT
+# ==============================================================================
+output:
+  # Default filename (override with --output flag)
+  filename: "CONVERSATION_FLOW.md"
+
+# ==============================================================================
+# LENGTH CONTROLS
+# ==============================================================================
+length:
+  # Max prompts to analyze (null = all)
+  max_prompts: null
+
+  # Skip minor prompts like "ok", "yes", "thanks"
+  skip_minor_prompts: true
+
+  # Min words in prompt to include (avoid very short prompts)
+  min_prompt_words: 3
