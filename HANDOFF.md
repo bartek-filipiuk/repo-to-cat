@@ -12,6 +12,53 @@ Following the incremental development principles from `DEVELOPMENT_RULES.md`, th
 
 ---
 
+## 🔄 Pull Request Workflow
+
+**IMPORTANT:** Starting from Stage 1.2, each stage will be developed on a feature branch and submitted as a Pull Request.
+
+### Before Starting Each Stage:
+1. ✅ Ensure you're on `main` branch
+2. ✅ Pull latest changes: `git pull origin main`
+3. ✅ Create feature branch: `git checkout -b feature/stage-X.Y-description`
+4. ✅ Work on stage checkboxes (one at a time, following TDD)
+
+### After Completing Each Stage:
+1. ✅ Commit all changes with descriptive message
+2. ✅ Push feature branch: `git push -u origin feature/stage-X.Y-description`
+3. ✅ Create Pull Request using `gh` CLI:
+   ```bash
+   gh pr create --title "Stage X.Y: Title" \
+     --body "Summary of changes, tests, checklist" \
+     --base main \
+     --head feature/stage-X.Y-description
+   ```
+4. ✅ Wait for review and approval
+5. ✅ After approval, merge PR and delete branch
+6. ✅ Checkout main and pull: `git checkout main && git pull origin main`
+
+### PR Template:
+```markdown
+## Stage X.Y: [Title] ✅
+
+### Summary
+[Brief description of what was accomplished]
+
+### Changes Made
+- [List of changes]
+
+### Tests
+- [Test results and coverage]
+
+### Checklist
+- [x] All checkboxes from HANDOFF.md completed
+- [x] Tests written and passing
+- [x] Code reviewed
+
+**Next:** Stage X.Z - [Next Stage Name]
+```
+
+---
+
 ## Stage 1: Project Setup & Infrastructure ⚙️
 
 ### 1.1 Basic Project Structure ✅
