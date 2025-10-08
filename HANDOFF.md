@@ -131,8 +131,8 @@ curl http://localhost:8000/health
 - [x] Test: `alembic upgrade head` (migration succeeds)
 - [x] Test: `pytest tests/unit/test_database.py -v` (DB connection works)
 - [x] Manual: Check PostgreSQL with `psql` or DB client
-- [ ] Git: All changes committed on `feature/stage-1.2-docker-database` branch
-- [ ] PR: Ready to create PR to `main` branch
+- [x] Git: All changes committed on `feature/stage-1.2-docker-database` branch
+- [x] PR: Created PR #1 to `main` branch (https://github.com/bartek-filipiuk/repo-to-cat/pull/1)
 
 ### 1.3 FastAPI Skeleton
 - [ ] Create `app/main.py` with basic FastAPI app
