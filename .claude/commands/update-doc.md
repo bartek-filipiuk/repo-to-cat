@@ -7,8 +7,6 @@ You are helping maintain the .agent documentation system for this Drupal project
 ## Documentation Structure
 
 The `.agent` folder contains:
-- **tasks/** - Implementation plans and Product Requirement Documents (PRDs)
-- **system/** - Project architecture, database schema, API endpoints, critical code
 - **sops/** - Standard Operating Procedures for common tasks
 - **lessons-learned/** - Captured mistakes and their solutions
 - **templates/** - Templates for creating new documentation

@@ -104,11 +104,20 @@ Captured mistakes and anti-patterns to avoid. These are real issues we've encoun
 |----|-------|----------|-------------|
 | [LL-PHP-001](lessons-learned/LL-PHP-001-missing-type-declarations.md) | Missing Type Declarations | Medium | Writing functions without parameter and return types |
 
+### Git-Specific
+
+| ID | Title | Severity | Description |
+|----|-------|----------|-------------|
+| [LL-GIT-001](lessons-learned/LL-GIT-001-no-ai-branding-commits.md) | No AI Branding in Commits | Low | Including AI tool branding in commit messages without user consent |
+
 ### By Category
 
 **Development Issues:**
 - LL-DRUPAL-001: Static Service Access
 - LL-PHP-001: Missing Type Declarations
+
+**Version Control:**
+- LL-GIT-001: No AI Branding in Commits
 
 **To be added:**
 - Input validation issues
@@ -193,9 +202,9 @@ grep -r "type declaration" .agent/ --include="*.md"
 
 ## 📊 Documentation Statistics
 
-**Total Documents**: 8
+**Total Documents**: 9
 - SOPs: 3
-- Lessons Learned: 2
+- Lessons Learned: 3
 - Templates: 3
 - System Docs: 0 (to be added)
 

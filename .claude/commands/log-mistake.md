@@ -1,96 +1,58 @@
 ---
-description: Capture a mistake or lesson learned for future reference
+description: Capture a mistake from current conversation
 ---
 
-You are helping capture a mistake or lesson learned to prevent it from happening again.
+Analyze the recent conversation to identify any mistakes, errors, or issues that occurred. Then create a concise lesson-learned document.
 
 ## Your Task
 
-Guide the user through documenting a mistake they made, using a **blameless, learning-focused approach**.
+1. **Review the conversation** - Look for:
+   - Errors that occurred
+   - Wrong approaches that were corrected
+   - Anti-patterns that were identified
+   - Things that didn't work as expected
 
-## Process
+2. **Extract the key mistake** - Identify the main issue
 
-### 1. Gather Information
+3. **Create concise lesson-learned doc**:
+   - Determine the next ID number (check `.agent/lessons-learned/`)
+   - Use format: `LL-[TECH]-[NUM]-[short-name].md`
+   - Keep it SHORT and actionable
 
-Ask the user these questions (adapt based on context):
+4. **Document structure** (keep minimal):
+   ```markdown
+   # LL-[TECH]-[NUM]: [Short Title]
 
-**Basic Information:**
-- What were you trying to do? (The original goal/task)
-- What actually happened? (The mistake or unexpected outcome)
-- What category does this fall into? (bug-fix, improvement, feature, deployment, performance, security)
-- What technology is involved? (drupal, php, javascript, database, etc.)
-- What stage were you in? (development, testing, staging, production)
-- How severe was the impact? (critical, high, medium, low)
+   **Tech**: [technology] | **Severity**: [high/medium/low] | **Date**: YYYY-MM-DD
 
-**Understanding the Mistake:**
-- Can you show me the code or describe what you did wrong?
-- Why is this problematic? (What are the consequences?)
-- What caused this mistake? (Lack of knowledge? Misunderstanding? Time pressure? Unclear requirements?)
+   ## The Mistake
+   [What went wrong - 1-2 sentences]
 
-**The Solution:**
-- How did you fix it or what should have been done instead?
-- Can you show me the correct approach?
+   ## Why It's Wrong
+   - [Key reason 1]
+   - [Key reason 2]
 
-**Prevention:**
-- How can we detect this issue in the future? (Manual checks? Automated tools?)
-- What can we do to prevent this? (Update checklist? Add linter rule? Create/update SOP?)
+   ## The Fix
+   [What to do instead - 1-2 sentences]
 
-### 2. Create the Lesson Learned Document
+   ```[language]
+   // Code example if applicable
+   ```
 
-1. **Read the template**: Check `.agent/templates/lesson-learned-template.md`
+   ## How to Detect
+   - [How to spot this]
 
-2. **Determine the next ID number**:
-   - Look at existing lessons in `.agent/lessons-learned/`
-   - Find the highest number for the technology category
-   - Increment by 1
+   ## Prevention
+   - [How to avoid it]
+   ```
 
-3. **Create the document**:
-   - Use filename format: `LL-[TECH]-[NUMBER]-[short-description].md`
-   - Examples:
-     - `LL-DRUPAL-001-static-service-access.md`
-     - `LL-PHP-001-missing-type-declarations.md`
-     - `LL-DATABASE-001-sql-injection-vulnerability.md`
+5. **Update `.agent/README.md`** - Add to the lessons learned table
 
-4. **Fill in all sections**:
-   - Include the actual code examples (before/after)
-   - Be specific about the impact and root cause
-   - Provide actionable prevention strategies
-   - Link to related SOPs or documentation
+## Keep It Short
 
-### 3. Update Related Documentation
+- Focus on the ONE main mistake
+- 2-3 sentences max per section
+- Include code only if essential
+- Make it scannable
 
-1. **Update `.agent/README.md`**:
-   - Add the new lesson learned to the index
-   - Keep it organized by category or date
-
-2. **Consider creating/updating an SOP**:
-   - If this mistake reveals a gap in procedures, suggest creating an SOP
-   - If an existing SOP should be updated, note that
-
-3. **Add to prevention systems** (if applicable):
-   - Suggest adding to code review checklist
-   - Recommend linter rules or static analysis configs
-   - Propose automated tests
-
-### 4. Provide Summary
-
-Give the user:
-- Confirmation of what was documented
-- Path to the created file
-- Suggestions for follow-up actions (SOPs to create/update, tools to configure, etc.)
-- Encouragement - mistakes are learning opportunities!
-
-## Tone and Approach
-
-**IMPORTANT**: Use a **blameless, positive, learning-focused tone**:
-- ✅ "This is a common mistake - let's capture how to avoid it"
-- ✅ "Great catch! Documenting this will help prevent it in the future"
-- ✅ "This will be valuable for the team to learn from"
-- ❌ "You shouldn't have done that"
-- ❌ "This was a bad practice"
-- ❌ Any language that implies blame or judgment
-
-## Example Interaction
-
-```
-User: I just realized I used \Drupal::service() in a service class instead of dependency injection
+If no clear mistake is found in the conversation, tell the user and ask them to describe what went wrong.

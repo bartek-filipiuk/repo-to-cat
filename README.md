@@ -140,18 +140,18 @@ pytest tests/unit/test_config.py -v
 
 ### Project Status
 
-🚧 **MVP Development** - See [HANDOFF.md](HANDOFF.md) for progress
+🚧 **MVP Development** - See [HANDOFF.md](PROJECT_FLOW_DOCS/HANDOFF.md) for progress
 
 **Current Stage:** Stage 1.1 - Basic Project Structure ✅
 
 ### Documentation
 
-- [PRD.md](PRD.md) - Product Requirements & Architecture
-- [HANDOFF.md](HANDOFF.md) - Development Checklist (150+ tasks)
-- [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Directory Layout
-- [FILE_SELECTION_STRATEGY.md](FILE_SELECTION_STRATEGY.md) - File Analysis Algorithm
-- [DEVELOPMENT_RULES.md](DEVELOPMENT_RULES.md) - TDD & Code Review Rules
-- [INIT_PROMPT.md](INIT_PROMPT.md) - Reusable initialization prompt
+- [PRD.md](PROJECT_FLOW_DOCS/PRD.md) - Product Requirements & Architecture
+- [HANDOFF.md](PROJECT_FLOW_DOCS/HANDOFF.md) - Development Checklist (150+ tasks)
+- [PROJECT_STRUCTURE.md](PROJECT_FLOW_DOCS/PROJECT_STRUCTURE.md) - Directory Layout
+- [FILE_SELECTION_STRATEGY.md](PROJECT_FLOW_DOCS/FILE_SELECTION_STRATEGY.md) - File Analysis Algorithm
+- [DEVELOPMENT_RULES.md](PROJECT_FLOW_DOCS/DEVELOPMENT_RULES.md) - TDD & Code Review Rules
+- [INIT_PROMPT.md](PROJECT_FLOW_DOCS/INIT_PROMPT.md) - Reusable initialization prompt
 
 ## How It Works
 
@@ -182,7 +182,7 @@ This project follows strict TDD and incremental development principles:
 4. Request review before moving to next checkbox
 5. Maintain 80%+ code coverage
 
-See [DEVELOPMENT_RULES.md](DEVELOPMENT_RULES.md) for details.
+See [DEVELOPMENT_RULES.md](PROJECT_FLOW_DOCS/DEVELOPMENT_RULES.md) for details.
 
 ## License
 
