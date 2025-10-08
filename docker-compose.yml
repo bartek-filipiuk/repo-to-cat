@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: repo-to-cat-postgres
+    environment:
+      POSTGRES_DB: repo_to_cat
+      POSTGRES_USER: repo_user
+      POSTGRES_PASSWORD: repo_password
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U repo_user -d repo_to_cat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - repo-to-cat-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: repo-to-cat-app
+    environment:
+      DATABASE_URL: postgresql://repo_user:repo_password@postgres:5432/repo_to_cat
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      TOGETHER_API_KEY: ${TOGETHER_API_KEY}
+      IMAGE_STORAGE_PATH: /app/generated_images
+      API_PORT: 8000
+      ENV: development
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./generated_images:/app/generated_images
+      - ./app:/app/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - repo-to-cat-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  postgres_data:
+
+networks:
+  repo-to-cat-network:
+    driver: bridge
