@@ -59,6 +59,43 @@ Following the incremental development principles from `DEVELOPMENT_RULES.md`, th
 
 ---
 
+## 📋 Stage Completion Checklist Template
+
+Before creating PR for each stage, verify:
+
+```markdown
+### Before Creating PR:
+- [ ] All stage checkboxes marked complete (✅)
+- [ ] Run tests: `pytest tests/ -v --cov=app --cov-report=term`
+- [ ] Coverage ≥ 80% for new code
+- [ ] All tests passing ✅
+- [ ] Stage-specific manual verification completed
+- [ ] Code committed with proper message format
+- [ ] HANDOFF.md updated with ✅ marks
+- [ ] Ready to push and create PR
+
+### Test Commands:
+# Run all tests with coverage
+pytest tests/ -v --cov=app --cov-report=html
+
+# Run specific test file
+pytest tests/unit/test_config.py -v
+
+# Run integration tests only
+pytest tests/integration/ -v
+
+# Check Docker (if applicable)
+docker-compose up -d
+docker-compose ps
+docker-compose logs
+
+# FastAPI server test (if applicable)
+uvicorn app.main:app --reload
+curl http://localhost:8000/health
+```
+
+---
+
 ## Stage 1: Project Setup & Infrastructure ⚙️
 
 ### 1.1 Basic Project Structure ✅
@@ -68,14 +105,34 @@ Following the incremental development principles from `DEVELOPMENT_RULES.md`, th
 - [x] Create `.gitignore` (include `.env`, `generated_images/`, `__pycache__/`)
 - [x] Create basic `README.md` with setup instructions
 
+**Stage 1.1 Completion Checklist:**
+- [x] All checkboxes marked ✅
+- [x] Manual verification: Directory structure matches PROJECT_STRUCTURE.md
+- [x] Manual verification: `requirements.txt` has all dependencies
+- [x] Manual verification: `.env.example` has all variables from PRD.md
+- [x] Test: `python3 -m pytest tests/unit/test_config.py -v` (passed ✅)
+- [x] Git: Committed to `main` branch with message "Stage 1.1: Basic project structure"
+
 ### 1.2 Docker & Database Setup
-- [ ] Create `Dockerfile` for Python app
-- [ ] Create `docker-compose.yml` with PostgreSQL service
-- [ ] Test Docker build and container startup
-- [ ] Create database initialization script
-- [ ] Create Alembic migration setup for database schema
-- [ ] Create initial migration for `users` and `generations` tables
-- [ ] Test database connection from Python
+- [x] Create `Dockerfile` for Python app
+- [x] Create `docker-compose.yml` with PostgreSQL service
+- [x] Test Docker build and container startup
+- [x] Create database initialization script
+- [x] Create Alembic migration setup for database schema
+- [x] Create initial migration for `users` and `generations` tables
+- [x] Test database connection from Python
+
+**Stage 1.2 Completion Checklist:**
+- [x] All checkboxes marked ✅
+- [x] Test: `docker-compose build` (succeeds)
+- [x] Test: `docker-compose up -d` (containers running)
+- [x] Test: `docker-compose ps` (postgres healthy)
+- [x] Test: `docker-compose logs postgres` (no errors)
+- [x] Test: `alembic upgrade head` (migration succeeds)
+- [x] Test: `pytest tests/unit/test_database.py -v` (DB connection works)
+- [x] Manual: Check PostgreSQL with `psql` or DB client
+- [x] Git: All changes committed on `feature/stage-1.2-docker-database` branch
+- [x] PR: Created PR #1 to `main` branch (https://github.com/bartek-filipiuk/repo-to-cat/pull/1)
 
 ### 1.3 FastAPI Skeleton
 - [ ] Create `app/main.py` with basic FastAPI app
@@ -84,6 +141,18 @@ Following the incremental development principles from `DEVELOPMENT_RULES.md`, th
 - [ ] Add CORS middleware configuration
 - [ ] Test FastAPI server startup (`uvicorn app.main:app --reload`)
 - [ ] Create basic health check endpoint structure
+
+**Stage 1.3 Completion Checklist:**
+- [ ] All checkboxes marked ✅
+- [ ] Test: `uvicorn app.main:app --reload` (server starts without errors)
+- [ ] Test: `curl http://localhost:8000/health` (returns 200 OK)
+- [ ] Test: `curl http://localhost:8000/docs` (Swagger UI loads)
+- [ ] Test: `pytest tests/unit/test_main.py -v` (basic app tests pass)
+- [ ] Test: `pytest tests/unit/test_database.py -v` (SQLAlchemy setup works)
+- [ ] Coverage: Run `pytest --cov=app --cov-report=term` (≥80%)
+- [ ] Manual: Verify CORS works (if testing from frontend)
+- [ ] Git: All changes committed on `feature/stage-1.3-fastapi-skeleton` branch
+- [ ] PR: Ready to create PR to `main` branch
 
 ---
 
