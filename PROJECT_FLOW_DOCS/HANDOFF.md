@@ -134,25 +134,25 @@ curl http://localhost:8000/health
 - [x] Git: All changes committed on `feature/stage-1.2-docker-database` branch
 - [x] PR: Created PR #1 to `main` branch (https://github.com/bartek-filipiuk/repo-to-cat/pull/1)
 
-### 1.3 FastAPI Skeleton
-- [ ] Create `app/main.py` with basic FastAPI app
+### 1.3 FastAPI Skeleton ✅
+- [x] Create `app/main.py` with basic FastAPI app
 - [x] Create `app/core/config.py` for environment configuration (completed in 1.1)
-- [ ] Create `app/core/database.py` for SQLAlchemy setup
-- [ ] Add CORS middleware configuration
-- [ ] Test FastAPI server startup (`uvicorn app.main:app --reload`)
-- [ ] Create basic health check endpoint structure
+- [x] Create `app/core/database.py` for SQLAlchemy setup (completed in 1.2)
+- [x] Add CORS middleware configuration
+- [x] Test FastAPI server startup (Docker: `docker compose up -d`)
+- [x] Create basic health check endpoint structure
 
 **Stage 1.3 Completion Checklist:**
-- [ ] All checkboxes marked ✅
-- [ ] Test: `uvicorn app.main:app --reload` (server starts without errors)
-- [ ] Test: `curl http://localhost:8000/health` (returns 200 OK)
-- [ ] Test: `curl http://localhost:8000/docs` (Swagger UI loads)
-- [ ] Test: `pytest tests/unit/test_main.py -v` (basic app tests pass)
-- [ ] Test: `pytest tests/unit/test_database.py -v` (SQLAlchemy setup works)
-- [ ] Coverage: Run `pytest --cov=app --cov-report=term` (≥80%)
-- [ ] Manual: Verify CORS works (if testing from frontend)
-- [ ] Git: All changes committed on `feature/stage-1.3-fastapi-skeleton` branch
-- [ ] PR: Ready to create PR to `main` branch
+- [x] All checkboxes marked ✅
+- [x] Test: `docker compose up -d` (app starts without errors)
+- [x] Test: `curl http://localhost:8000/health` (returns 200 OK, healthy status)
+- [x] Test: `curl http://localhost:8000/docs` (Swagger UI loads)
+- [x] Test: `docker compose exec app pytest tests/unit/test_main.py -v` (11/11 tests pass)
+- [x] Test: `docker compose exec app pytest tests/unit/test_database.py -v` (7/7 tests pass)
+- [x] Coverage: `docker compose exec app pytest --cov=app --cov-report=term` (93% ≥80% ✅)
+- [x] Manual: CORS configured (3 allowed origins)
+- [x] Git: All changes committed on `feature/stage-1.3-fastapi-skeleton` branch
+- [x] PR: Ready to create PR to `main` branch
 
 ---
 
