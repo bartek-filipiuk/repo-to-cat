@@ -1,7 +1,7 @@
 # Testing Guide
 
 **Last Updated:** 2025-10-08
-**Stage:** 1.2 - Docker & Database Setup
+**Stage:** 1.3 - FastAPI Skeleton
 
 ---
 
@@ -14,23 +14,57 @@ This project uses **pytest** for testing with:
 
 **Coverage target:** 80%+
 
+**⚠️ IMPORTANT:** All tests MUST be run inside Docker containers for production parity (see [LL-DEV-001](../.agent/lessons-learned/LL-DEV-001-docker-first-development.md)).
+
 ---
 
-## Quick Start
+## Running Tests in Docker
+
+**Docker-First Development** - Always use Docker commands for testing:
 
 ### Run All Tests
 
 ```bash
-# Run all tests
-pytest
+# Run all tests in Docker
+docker compose exec app pytest
 
 # Verbose output
-pytest -v
+docker compose exec app pytest -v
 
 # Very verbose (show all output)
-pytest -vv
+docker compose exec app pytest -vv
 
 # Run with coverage
+docker compose exec app pytest --cov=app --cov-report=term
+```
+
+### Quick Commands
+
+```bash
+# Most common: Run all tests with verbose output
+docker compose exec app pytest -v
+
+# Run with coverage report
+docker compose exec app pytest tests/ -v --cov=app --cov-report=term
+
+# Fast check: Run specific test file
+docker compose exec app pytest tests/unit/test_main.py -v
+```
+
+---
+
+## Quick Start (Legacy - Host-Based)
+
+**⚠️ NOT RECOMMENDED:** Only use host-based commands for quick local debugging.
+
+```bash
+# Run all tests (host)
+pytest
+
+# Verbose output (host)
+pytest -v
+
+# Run with coverage (host)
 pytest --cov=app --cov-report=term
 ```
 
@@ -407,7 +441,7 @@ jobs:
 
 ## Troubleshooting
 
-### Tests Can't Connect to Database
+### Docker: Tests Can't Connect to Database
 
 **Error:** `OperationalError: could not connect to server`
 
@@ -416,14 +450,33 @@ jobs:
 # 1. Ensure PostgreSQL is running
 docker compose ps
 
-# 2. Check DATABASE_URL in .env
-cat .env | grep DATABASE_URL
+# 2. Check postgres health
+docker compose logs postgres --tail=20
 
-# 3. Test connection manually
-psql postgresql://repo_user:repo_password@localhost:5434/repo_to_cat -c "SELECT 1"
+# 3. Test connection from inside app container
+docker compose exec app psql postgresql://repo_user:repo_password@postgres:5432/repo_to_cat -c "SELECT 1"
 
-# 4. Apply migrations
-alembic upgrade head
+# 4. Apply migrations (if needed)
+docker compose exec app alembic upgrade head
+
+# 5. Restart containers
+docker compose restart app
+```
+
+### Docker: Container Not Running
+
+**Error:** `Error response from daemon: Container ... is not running`
+
+**Fix:**
+```bash
+# Start all services
+docker compose up -d
+
+# Check container status
+docker compose ps
+
+# View startup logs
+docker compose logs app --tail=50
 ```
 
 ### Import Errors
