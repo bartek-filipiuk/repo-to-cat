@@ -110,17 +110,32 @@ Captured mistakes and anti-patterns to avoid. These are real issues we've encoun
 |----|-------|----------|-------------|
 | [LL-GIT-001](lessons-learned/LL-GIT-001-no-ai-branding-commits.md) | No AI Branding in Commits | Low | Including AI tool branding in commit messages without user consent |
 
+### Development-Specific
+
+| ID | Title | Severity | Description |
+|----|-------|----------|-------------|
+| [LL-DEV-001](lessons-learned/LL-DEV-001-docker-first-development.md) | Docker-First Development | High | Developing on host instead of Docker containers leads to environment inconsistencies |
+
+### Validation-Specific
+
+| ID | Title | Severity | Description |
+|----|-------|----------|-------------|
+| [LL-VALIDATION-001](lessons-learned/LL-VALIDATION-001-empty-url-segments.md) | Empty URL Segments | High | URL validation that checks segment count but not content allows malformed inputs |
+
 ### By Category
 
 **Development Issues:**
 - LL-DRUPAL-001: Static Service Access
 - LL-PHP-001: Missing Type Declarations
+- LL-DEV-001: Docker-First Development
+
+**Validation Issues:**
+- LL-VALIDATION-001: Empty URL Segments
 
 **Version Control:**
 - LL-GIT-001: No AI Branding in Commits
 
 **To be added:**
-- Input validation issues
 - Translation handling mistakes
 - Database operation anti-patterns
 - Configuration file errors
@@ -202,9 +217,9 @@ grep -r "type declaration" .agent/ --include="*.md"
 
 ## 📊 Documentation Statistics
 
-**Total Documents**: 9
+**Total Documents**: 10
 - SOPs: 3
-- Lessons Learned: 3
+- Lessons Learned: 4
 - Templates: 3
 - System Docs: 0 (to be added)
 
@@ -215,6 +230,7 @@ grep -r "type declaration" .agent/ --include="*.md"
 - Security: ⚠️ Not yet documented
 
 **Most Recent Updates**:
+- 2025-10-09: Added LL-VALIDATION-001 (Empty URL Segments)
 - 2025-10-08: Initial system setup
 - 2025-10-08: Added core development SOPs
 - 2025-10-08: Added first lessons learned
