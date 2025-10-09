@@ -60,6 +60,24 @@ def test_generate_request_rejects_invalid_urls():
             GenerateRequest(github_url=url)
 
 
+def test_generate_request_rejects_empty_owner_or_repo():
+    """Test that GenerateRequest rejects URLs with empty owner or repo segments."""
+    from app.api.schemas import GenerateRequest
+
+    invalid_urls = [
+        "https://github.com/owner/",      # empty repo
+        "https://github.com//repo",       # empty owner
+        "https://github.com//",           # both empty
+        "https://github.com/owner//",     # empty repo with trailing slash
+    ]
+
+    for url in invalid_urls:
+        with pytest.raises(ValidationError) as exc_info:
+            GenerateRequest(github_url=url)
+        # Verify it's caught by our validation, not another error
+        assert "non-empty" in str(exc_info.value).lower() or "owner and repository" in str(exc_info.value).lower()
+
+
 def test_repository_info_schema_exists():
     """Test that RepositoryInfo schema exists with required fields."""
     from app.api.schemas import RepositoryInfo

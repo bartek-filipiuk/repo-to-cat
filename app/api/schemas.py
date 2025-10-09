@@ -40,6 +40,10 @@ class GenerateRequest(BaseModel):
         if len(parts) < 2:
             raise ValueError("GitHub URL must include owner and repository name")
 
+        # Ensure both owner and repo are non-empty
+        if not parts[0] or not parts[1]:
+            raise ValueError("GitHub URL must have non-empty owner and repository name")
+
         return v
 
     model_config = ConfigDict(
