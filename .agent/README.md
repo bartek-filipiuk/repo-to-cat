@@ -109,6 +109,7 @@ Captured mistakes and anti-patterns to avoid. These are real issues we've encoun
 | ID | Title | Severity | Description |
 |----|-------|----------|-------------|
 | [LL-GIT-001](lessons-learned/LL-GIT-001-no-ai-branding-commits.md) | No AI Branding in Commits | Low | Including AI tool branding in commit messages without user consent |
+| [LL-GIT-002](lessons-learned/LL-GIT-002-no-direct-main-pushes.md) | No Direct Main Pushes | High | Pushing directly to main branch instead of using PR workflow (even for docs) |
 
 ### Development-Specific
 
@@ -134,6 +135,7 @@ Captured mistakes and anti-patterns to avoid. These are real issues we've encoun
 
 **Version Control:**
 - LL-GIT-001: No AI Branding in Commits
+- LL-GIT-002: No Direct Main Pushes
 
 **To be added:**
 - Translation handling mistakes
@@ -217,9 +219,9 @@ grep -r "type declaration" .agent/ --include="*.md"
 
 ## 📊 Documentation Statistics
 
-**Total Documents**: 10
+**Total Documents**: 11
 - SOPs: 3
-- Lessons Learned: 4
+- Lessons Learned: 5
 - Templates: 3
 - System Docs: 0 (to be added)
 
@@ -230,7 +232,9 @@ grep -r "type declaration" .agent/ --include="*.md"
 - Security: ⚠️ Not yet documented
 
 **Most Recent Updates**:
+- 2025-10-09: Added LL-GIT-002 (No Direct Main Pushes)
 - 2025-10-09: Added LL-VALIDATION-001 (Empty URL Segments)
+- 2025-10-09: Updated DEVELOPMENT_RULES.md with PR-only workflow
 - 2025-10-08: Initial system setup
 - 2025-10-08: Added core development SOPs
 - 2025-10-08: Added first lessons learned

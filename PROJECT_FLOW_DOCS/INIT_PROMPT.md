@@ -29,6 +29,7 @@ WORKFLOW:
 3. For code: TDD (tests first, then implement)
 4. After each checkbox: run tests, request review, mark ✅
 5. Follow stage completion checklist before creating PR
+6. **IMPORTANT:** NEVER push directly to main - ALL changes via PR (even docs)
 
 MY REQUEST:
 [Your instruction here - examples below]

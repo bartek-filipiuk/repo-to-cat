@@ -16,3 +16,10 @@
 - Every new function needs corresponding tests
 - Minimum 80% code coverage required
 - Tests must pass before review
+
+### 4. **No Direct Pushes to Main**
+- **NEVER push directly to `main` branch** - even for documentation
+- **ALL changes** must go through Pull Request workflow
+- This includes: code, docs, markdown files, configuration, etc.
+- Only exception: Emergency hotfixes (with team lead approval)
+- Process: Create branch → Make changes → Push branch → Create PR → Review → Merge
