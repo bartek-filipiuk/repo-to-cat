@@ -22,7 +22,7 @@ def _parse_github_url(url: str) -> tuple[str, str]:
     Parse GitHub URL to extract owner and repository name.
 
     Args:
-        url: GitHub repository URL (https://github.com/owner/repo)
+        url: GitHub repository URL (https://github.com/owner/repo or https://github.com/owner/repo.git)
 
     Returns:
         Tuple of (owner, repo_name)
@@ -46,7 +46,12 @@ def _parse_github_url(url: str) -> tuple[str, str]:
     if not parts[0] or not parts[1]:
         raise ValueError("GitHub URL must have non-empty owner and repository name")
 
-    return parts[0], parts[1]
+    # Strip optional .git suffix from repository name (common in clone URLs)
+    repo_name = parts[1]
+    if repo_name.endswith(".git"):
+        repo_name = repo_name[:-4]
+
+    return parts[0], repo_name
 
 
 def _get_github_client() -> Github:

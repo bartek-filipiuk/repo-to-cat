@@ -72,6 +72,28 @@ class TestGetRepositoryMetadata:
         with pytest.raises(GithubException):
             get_repository_metadata("https://github.com/test-owner/private-repo")
 
+    @patch('app.services.github_service.Github')
+    def test_get_metadata_with_git_suffix(self, mock_github):
+        """Test metadata retrieval with .git suffix in URL."""
+        # Setup mock
+        mock_repo = Mock()
+        mock_repo.name = "test-repo"
+        mock_repo.owner.login = "test-owner"
+        mock_repo.size = 1234
+        mock_repo.stargazers_count = 567
+        mock_repo.language = "Python"
+        mock_repo.description = "Test description"
+
+        mock_github.return_value.get_repo.return_value = mock_repo
+
+        # Execute with .git suffix
+        result = get_repository_metadata("https://github.com/test-owner/test-repo.git")
+
+        # Assert - should call get_repo without .git suffix
+        mock_github.return_value.get_repo.assert_called_once_with("test-owner/test-repo")
+        assert result["name"] == "test-repo"
+        assert result["owner"] == "test-owner"
+
 
 class TestGetRepositoryLanguages:
     """Test get_repository_languages() function."""
