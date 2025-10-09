@@ -158,12 +158,22 @@ curl http://localhost:8000/health
 
 ## Stage 2: Configuration & Models 📦
 
-### 2.1 Configuration Management
-- [ ] Create `config/mappings.py` with cat attribute mappings
-- [ ] Create `LANGUAGE_BACKGROUNDS` dictionary
-- [ ] Create `QUALITY_INDICATORS` dictionary
-- [ ] Create `CAT_SIZE_MAPPING` dictionary
-- [ ] Write tests for configuration loading
+### 2.1 Configuration Management ✅
+- [x] Create `config/mappings.py` with cat attribute mappings
+- [x] Create `LANGUAGE_BACKGROUNDS` dictionary
+- [x] Create `QUALITY_INDICATORS` dictionary
+- [x] Create `CAT_SIZE_MAPPING` dictionary
+- [x] Write tests for configuration loading
+
+**Stage 2.1 Completion Checklist:**
+- [x] All checkboxes marked ✅
+- [x] Test: `docker compose exec app pytest tests/unit/test_mappings.py -v` (21/21 passed ✅)
+- [x] Coverage: `docker compose exec app pytest tests/unit/test_mappings.py --cov=config.mappings` (100% ✅)
+- [x] Manual verification: 28 languages in LANGUAGE_BACKGROUNDS (including PHP with elephants)
+- [x] Bonus: Added CAT_AGE_MAPPING and CAT_EXPRESSION_MAPPING dictionaries
+- [x] Bonus: Added get_language_background() helper function with case-insensitive lookup
+- [x] Git: All changes ready on `feature/stage-2.1-configuration` branch
+- [x] Ready to commit and create PR
 
 ### 2.2 Database Models
 - [ ] Create `app/models/database.py` with SQLAlchemy models
