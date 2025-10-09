@@ -7,9 +7,9 @@ import os
 import base64
 import time
 import logging
-from typing import Tuple, Optional
+import json
+from typing import Tuple, Optional, Dict, Any
 import requests
-from together import Together
 
 logger = logging.getLogger(__name__)
 
@@ -24,11 +24,13 @@ class TogetherProvider:
 
     DEFAULT_MODEL = "black-forest-labs/FLUX.1.1-pro"
     DEFAULT_WIDTH = 768
-    DEFAULT_HEIGHT = 432
+    DEFAULT_HEIGHT = 448  # Must be multiple of 32
     DEFAULT_STEPS = 20
     MAX_RETRIES = 3
     BASE_RETRY_DELAY = 1  # seconds
     DOWNLOAD_TIMEOUT = 30  # seconds
+
+    API_BASE_URL = "https://api.together.xyz/v1/images/generations"
 
     def __init__(self, api_key: Optional[str] = None):
         """
@@ -43,8 +45,6 @@ class TogetherProvider:
         self.api_key = api_key or os.environ.get("TOGETHER_API_KEY")
         if not self.api_key:
             raise ValueError("TOGETHER_API_KEY not found in environment variables")
-
-        self.client = Together(api_key=self.api_key)
 
     def _download_and_encode_image(self, image_url: str) -> str:
         """
@@ -89,8 +89,8 @@ class TogetherProvider:
 
         Args:
             prompt: Detailed text description of the cat image
-            width: Image width in pixels (default: 768)
-            height: Image height in pixels (default: 432)
+            width: Image width in pixels (default: 768, must be multiple of 32)
+            height: Image height in pixels (default: 448, must be multiple of 32)
             steps: Number of diffusion steps (default: 20)
             model: Model to use (default: black-forest-labs/FLUX.1.1-pro)
 
@@ -114,19 +114,41 @@ class TogetherProvider:
                     f"{prompt[:50]}..."
                 )
 
-                # Generate image
-                response = self.client.images.generate(
-                    model=model,
-                    width=width,
-                    height=height,
-                    steps=steps,
-                    prompt=prompt,
-                    n=1,
-                    response_format="url"
-                )
+                # Generate image using direct API call
+                headers = {
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json"
+                }
 
-                # Extract image URL
-                image_url = response.data[0].url
+                payload = {
+                    "model": model,
+                    "prompt": prompt,
+                    "width": width,
+                    "height": height,
+                    "steps": steps,
+                    "n": 1
+                }
+
+                api_response = requests.post(
+                    self.API_BASE_URL,
+                    headers=headers,
+                    json=payload,
+                    timeout=60
+                )
+                api_response.raise_for_status()
+
+                response_data = api_response.json()
+
+                # Extract image URL from response
+                if not response_data.get("data") or len(response_data["data"]) == 0:
+                    raise ImageGenerationError("No image data in API response")
+
+                image_data = response_data["data"][0]
+                image_url = image_data.get("url")
+
+                if not image_url:
+                    raise ImageGenerationError("No URL in image response")
+
                 logger.info(f"Image generated successfully: {image_url}")
 
                 # Download image and convert to base64

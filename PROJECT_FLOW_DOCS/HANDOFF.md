@@ -263,7 +263,7 @@ curl http://localhost:8000/health
 - [x] Create `app/providers/together_ai.py`
 - [x] Implement Together.ai client initialization
 - [x] Implement `generate_cat_image()` function using FLUX.1.1-pro
-- [x] Configure image parameters (768x432, 20 steps, prompt, model)
+- [x] Configure image parameters (768x448, 20 steps, prompt, model)
 - [x] Handle API errors and retries
 - [x] Implement image download and base64 encoding
 - [x] Write unit tests with mocked responses
