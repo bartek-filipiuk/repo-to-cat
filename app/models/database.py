@@ -5,7 +5,7 @@ Defines User and Generation tables matching the schema in PRD.md.
 """
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, Numeric, Text, DateTime
+from sqlalchemy import Column, String, Integer, Numeric, Text, DateTime, Index
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from app.core.database import Base
 
@@ -49,6 +49,12 @@ class Generation(Base):
     image_path = Column(Text, nullable=True)
     image_prompt = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Indexes for performance (as per PRD.md requirements)
+    __table_args__ = (
+        Index('ix_generations_github_url', 'github_url'),
+        Index('ix_generations_created_at', 'created_at'),
+    )
 
     def __repr__(self):
         return f"<Generation(id={self.id}, repo={self.repo_owner}/{self.repo_name})>"

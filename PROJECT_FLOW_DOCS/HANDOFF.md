@@ -158,29 +158,57 @@ curl http://localhost:8000/health
 
 ## Stage 2: Configuration & Models 📦
 
-### 2.1 Configuration Management
-- [ ] Create `config/mappings.py` with cat attribute mappings
-- [ ] Create `LANGUAGE_BACKGROUNDS` dictionary
-- [ ] Create `QUALITY_INDICATORS` dictionary
-- [ ] Create `CAT_SIZE_MAPPING` dictionary
-- [ ] Write tests for configuration loading
+### 2.1 Configuration Management ✅
+- [x] Create `config/mappings.py` with cat attribute mappings
+- [x] Create `LANGUAGE_BACKGROUNDS` dictionary
+- [x] Create `QUALITY_INDICATORS` dictionary
+- [x] Create `CAT_SIZE_MAPPING` dictionary
+- [x] Write tests for configuration loading
 
-### 2.2 Database Models
-- [ ] Create `app/models/database.py` with SQLAlchemy models
-- [ ] Implement `User` model
-- [ ] Implement `Generation` model
-- [ ] Add indexes for performance (github_url, created_at)
-- [ ] Write unit tests for models
+**Stage 2.1 Completion Checklist:**
+- [x] All checkboxes marked ✅
+- [x] Test: `docker compose exec app pytest tests/unit/test_mappings.py -v` (21/21 passed ✅)
+- [x] Coverage: `docker compose exec app pytest tests/unit/test_mappings.py --cov=config.mappings` (100% ✅)
+- [x] Manual verification: 28 languages in LANGUAGE_BACKGROUNDS (including PHP with elephants)
+- [x] Bonus: Added CAT_AGE_MAPPING and CAT_EXPRESSION_MAPPING dictionaries
+- [x] Bonus: Added get_language_background() helper function with case-insensitive lookup
+- [x] Git: All changes ready on `feature/stage-2.1-configuration` branch
+- [x] Ready to commit and create PR
 
-### 2.3 API Schemas
-- [ ] Create `app/api/schemas.py` with Pydantic models
-- [ ] Create `GenerateRequest` schema
-- [ ] Create `GenerateResponse` schema
-- [ ] Create `HealthCheckResponse` schema
-- [ ] Create `RepositoryInfo` schema
-- [ ] Create `AnalysisResult` schema
-- [ ] Create `CatAttributes` schema
-- [ ] Write validation tests for schemas
+### 2.2 Database Models ✅
+- [x] Create `app/models/database.py` with SQLAlchemy models
+- [x] Implement `User` model
+- [x] Implement `Generation` model
+- [x] Add indexes for performance (github_url, created_at)
+- [x] Write unit tests for models
+
+**Stage 2.2 Completion Checklist:**
+- [x] All checkboxes marked ✅
+- [x] Test: `docker compose exec app pytest tests/unit/test_models.py -v` (21/21 passed ✅)
+- [x] Coverage: `docker compose exec app pytest tests/unit/test_models.py --cov=app.models.database` (100% ✅)
+- [x] Models: User and Generation with all fields from PRD
+- [x] Indexes: github_url and created_at on generations table
+- [x] Migration: Created and applied (a8d0d774b4fe)
+
+### 2.3 API Schemas ✅
+- [x] Create `app/api/schemas.py` with Pydantic models
+- [x] Create `GenerateRequest` schema
+- [x] Create `GenerateResponse` schema
+- [x] Create `HealthCheckResponse` schema
+- [x] Create `RepositoryInfo` schema
+- [x] Create `AnalysisResult` schema
+- [x] Create `CatAttributes` schema
+- [x] Write validation tests for schemas
+
+**Stage 2.3 Completion Checklist:**
+- [x] All checkboxes marked ✅
+- [x] Test: `docker compose exec app pytest tests/unit/test_schemas.py -v` (20/20 passed ✅)
+- [x] Coverage: `docker compose exec app pytest tests/unit/test_schemas.py --cov=app.api.schemas` (97% ✅)
+- [x] Schemas: All 7 schemas matching PRD.md API specs
+- [x] Validation: GitHub URL validation, score range validation (0-10)
+- [x] Bonus: Added ImageData schema for image response structure
+- [x] Git: All changes ready on `feature/stage-2.2-2.3-models-schemas` branch
+- [x] Ready to commit and create PR
 
 ---
 
