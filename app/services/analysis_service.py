@@ -431,21 +431,33 @@ class AnalysisService:
         lines = code.splitlines()
         depths = []
 
-        for line in lines:
-            if not line.strip():  # Skip empty lines
-                continue
+        if language == "Python" or language == "Ruby":
+            # For Python/Ruby: use indentation levels
+            for line in lines:
+                if not line.strip():  # Skip empty lines
+                    continue
 
-            if language == "Python":
                 # Count indentation levels (4 spaces or 1 tab = 1 level)
                 stripped = line.lstrip()
                 indent_chars = len(line) - len(stripped)
                 # Assume 4 spaces per indent level
                 depth = indent_chars // 4
-            else:
-                # For brace-based languages, count opening braces
-                depth = line.count('{')
+                depths.append(depth)
+        else:
+            # For brace-based languages: track cumulative brace depth
+            brace_depth = 0
+            for line in lines:
+                if not line.strip():  # Skip empty lines
+                    continue
 
-            depths.append(depth)
+                # Record depth BEFORE processing this line's braces
+                depths.append(max(0, brace_depth))
+
+                # Update brace depth for next lines
+                opening = line.count('{')
+                closing = line.count('}')
+                brace_depth += opening - closing
+                brace_depth = max(0, brace_depth)  # Don't go negative
 
         if not depths:
             return {
@@ -594,13 +606,13 @@ class AnalysisService:
         - Complexity: +2 if avg < 5, +1 if avg < 8, 0 otherwise
         - Tests: +1 if has_tests
 
-        Total possible: 10 points
+        Note: Maximum raw total is 11 points, but score is capped at 10.0
 
         Args:
             metrics: Dict with heuristic metrics
 
         Returns:
-            Float: Normalized score (0-10)
+            Float: Normalized score (0-10), capped at 10.0
         """
         score = 0.0
 
@@ -649,7 +661,8 @@ class AnalysisService:
         if metrics.get("has_tests", False):
             score += 1
 
-        return round(score, 1)
+        # Cap at 10.0 to prevent AnalysisResult validation errors
+        return min(round(score, 1), 10.0)
 
     def _merge_metrics(
         self,

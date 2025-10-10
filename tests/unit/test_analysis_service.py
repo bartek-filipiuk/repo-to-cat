@@ -208,6 +208,40 @@ print(x + y)"""
         assert result["nesting_depth_avg"] > 0
         assert result["nesting_depth_max"] >= 3  # Three levels of indentation
 
+    def test_calculate_nesting_depth_javascript_nested(self, analysis_service):
+        """Test with nested JavaScript code (brace-based)."""
+        code = """function foo() {
+    if (x > 0) {
+        for (let i = 0; i < 10; i++) {
+            console.log(i);
+        }
+    }
+}"""
+
+        result = analysis_service._calculate_nesting_depth(code, "JavaScript")
+
+        # Should track cumulative brace depth, not just braces on each line
+        assert result["nesting_depth_max"] >= 2  # At least 2 levels deep
+        assert result["nesting_depth_avg"] > 0
+
+    def test_calculate_nesting_depth_c_nested(self, analysis_service):
+        """Test with nested C code (brace-based)."""
+        code = """int main() {
+    if (x > 0) {
+        while (y < 10) {
+            printf("test");
+            y++;
+        }
+    }
+    return 0;
+}"""
+
+        result = analysis_service._calculate_nesting_depth(code, "C")
+
+        # The printf and y++ lines should report depth of 2
+        assert result["nesting_depth_max"] >= 2
+        assert result["nesting_depth_avg"] > 0
+
 
 class TestCommentRatioCalculation:
     """Tests for _calculate_comment_ratio method."""
@@ -405,6 +439,25 @@ def hello():
         assert result["function_count"] == 2
         assert result["has_tests"] is True
 
+    def test_normalize_heuristics_caps_at_10(self, analysis_service):
+        """Test that normalization caps score at 10.0 even if raw score is 11."""
+        # Create perfect metrics that would score 11 points
+        perfect_metrics = {
+            "line_length_avg": 80,          # +2 (< 100)
+            "function_length_avg": 25,      # +2 (< 30)
+            "nesting_depth_avg": 2,         # +2 (< 3)
+            "comment_ratio": 0.15,          # +1 (> 0.1)
+            "has_type_hints": True,         # +1
+            "complexity_avg": 3,            # +2 (< 5)
+            "has_tests": True               # +1
+            # Total = 11 points, should be capped at 10.0
+        }
+
+        score = analysis_service._normalize_heuristics_to_10_scale(perfect_metrics)
+
+        assert score == 10.0  # Should be capped
+        assert score <= 10.0  # Must not exceed 10
+
 
 class TestLLMAnalysis:
     """Tests for analyze_with_llm method."""
@@ -538,3 +591,51 @@ def test_hello():
         # 0.3 * 10 + 0.7 * 10 = 10.0
         # But heuristics might not be perfect, so check it's weighted
         assert result.code_quality_score > 7.0  # At least weighted towards LLM's 10
+
+    def test_analyze_code_files_perfect_code_does_not_exceed_10(self, analysis_service):
+        """Test that even with perfect code, final score never exceeds 10.0."""
+        # Create perfect code that would score 11 on heuristics
+        code_files = [
+            {
+                "path": "perfect.py",
+                "language": "Go",  # Always has type hints
+                "content": """// Perfect Go code
+func hello() {
+    return
+}
+
+func TestHello() {
+    hello()
+}
+"""
+            },
+            {
+                "path": "test_perfect.go",
+                "language": "Go",
+                "content": "func TestAnother() {}"
+            }
+        ]
+
+        # Mock LLM to return perfect score
+        mock_llm_result = CodeQualityAnalysis(
+            overall_quality_score=10.0,
+            metrics=[
+                CodeMetric(name="Readability", score=10.0, description="Perfect"),
+                CodeMetric(name="Maintainability", score=10.0, description="Perfect"),
+                CodeMetric(name="Complexity", score=10.0, description="Perfect"),
+                CodeMetric(name="Best Practices", score=10.0, description="Perfect"),
+                CodeMetric(name="Error Handling", score=10.0, description="Perfect")
+            ],
+            strengths=["Perfect"],
+            weaknesses=[],
+            recommendations=[],
+            summary="Perfect"
+        )
+
+        analysis_service.openrouter_provider.analyze_code_quality = Mock(return_value=mock_llm_result)
+
+        result = analysis_service.analyze_code_files(code_files)
+
+        # Must not exceed 10.0 (would fail AnalysisResult validation)
+        assert result.code_quality_score <= 10.0
+        assert isinstance(result.code_quality_score, (int, float))
