@@ -354,22 +354,34 @@ curl http://localhost:8000/health
 
 ---
 
-## Stage 7: Image Service 🎨
+## Stage 7: Image Service 🎨 ✅
 
-### 7.1 Image Generation
-- [ ] Create `app/services/image_service.py`
-- [ ] Implement `map_analysis_to_cat_attributes()` function
-- [ ] Implement `create_image_prompt()` function
-- [ ] Use mapping config from `config/mappings.py`
-- [ ] Write tests for prompt generation
+### 7.1 Image Generation ✅
+- [x] Create `app/services/image_service.py`
+- [x] Implement `map_analysis_to_cat_attributes()` function
+- [x] Implement `create_image_prompt()` function
+- [x] Use mapping config from `config/mappings.py`
+- [x] Write tests for prompt generation
 
-### 7.2 Image Storage
-- [ ] Implement `save_image_locally()` function
-- [ ] Create `generated_images/` directory structure
-- [ ] Implement UUID-based filename generation
-- [ ] Implement base64 encoding for response
-- [ ] Add file cleanup for old images (optional)
-- [ ] Write tests for image storage
+### 7.2 Image Storage ✅
+- [x] Implement `save_image_locally()` function
+- [x] Create `generated_images/` directory structure
+- [x] Implement UUID-based filename generation
+- [x] Implement base64 encoding for response
+- [x] Add file cleanup for old images (optional) - Skipped for MVP
+- [x] Write tests for image storage
+
+**Stage 7 Completion Checklist:**
+- [x] All checkboxes marked ✅
+- [x] Test: `pytest tests/unit/test_image_service.py -v` (31/31 passed ✅)
+- [x] Test: `pytest tests/unit/test_langgraph_nodes.py -v` (16/16 passed ✅)
+- [x] Test: `pytest tests/integration/test_langgraph_workflow.py -v` (9/9 passed ✅)
+- [x] Coverage: `pytest tests/unit/test_image_service.py --cov=app.services.image_service` (91% ≥80% ✅)
+- [x] Refactored nodes to use image service (DRY principle)
+- [x] Uses settings.IMAGE_STORAGE_PATH for configurable storage
+- [x] Returns absolute URL paths (/generated_images/uuid.png)
+- [x] Git: All changes committed on `feature/stage-7-image-service` branch
+- [x] PR: Created PR #12 to `main` branch (https://github.com/bartek-filipiuk/repo-to-cat/pull/12)
 
 ---
 
