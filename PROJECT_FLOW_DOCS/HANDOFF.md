@@ -316,32 +316,41 @@ curl http://localhost:8000/health
 
 ## Stage 6: LangGraph Workflow 🔄
 
-### 6.1 State Management
-- [ ] Create `app/langgraph/state.py`
-- [ ] Define `WorkflowState` TypedDict
-- [ ] Add fields: github_url, metadata, files, analysis, cat_attrs, image
-- [ ] Write state validation tests
+### 6.1 State Management ✅
+- [x] Create `app/langgraph/state.py`
+- [x] Define `WorkflowState` TypedDict
+- [x] Add fields: github_url, metadata, files, analysis, cat_attrs, image
+- [x] Write state validation tests
 
-### 6.2 Workflow Nodes
-- [ ] Create `app/langgraph/nodes.py`
-- [ ] Implement `extract_metadata_node()`
-- [ ] Implement `select_files_node()`
-- [ ] Implement `fetch_files_node()`
-- [ ] Implement `analyze_code_node()`
-- [ ] Implement `map_attributes_node()`
-- [ ] Implement `generate_prompt_node()`
-- [ ] Implement `generate_image_node()`
-- [ ] Implement `save_to_db_node()`
-- [ ] Write unit tests for each node
+### 6.2 Workflow Nodes ✅
+- [x] Create `app/langgraph/nodes.py`
+- [x] Implement `extract_metadata_node()`
+- [x] Implement `select_files_node()`
+- [x] Implement `fetch_files_node()`
+- [x] Implement `analyze_code_node()`
+- [x] Implement `map_attributes_node()`
+- [x] Implement `generate_prompt_node()`
+- [x] Implement `generate_image_node()`
+- [x] Implement `save_to_db_node()`
+- [x] Write unit tests for each node
 
-### 6.3 Workflow Definition
-- [ ] Create `app/langgraph/workflow.py`
-- [ ] Define LangGraph StateGraph
-- [ ] Add all nodes to graph
-- [ ] Define edges between nodes
-- [ ] Add conditional edges (error handling)
-- [ ] Compile workflow
-- [ ] Write integration tests for full workflow
+### 6.3 Workflow Definition ✅
+- [x] Create `app/langgraph/workflow.py`
+- [x] Define LangGraph StateGraph
+- [x] Add all nodes to graph
+- [x] Define edges between nodes
+- [x] Add conditional edges (error handling)
+- [x] Compile workflow
+- [x] Write integration tests for full workflow
+
+**Stage 6 Completion Checklist:**
+- [x] All checkboxes marked ✅
+- [x] Test: `pytest tests/unit/test_langgraph*.py tests/integration/test_langgraph*.py -v` (35/35 passed ✅)
+- [x] Coverage: `pytest --cov=app/langgraph --cov-report=term` (100% ≥80% ✅)
+- [x] All tests passing ✅
+- [x] Overall LangGraph coverage: 100% (159/159 statements)
+- [x] Git: All changes ready on `feature/stage-6-langgraph` branch
+- [ ] PR created to `main` branch
 
 ---
 
