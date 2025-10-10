@@ -123,12 +123,21 @@ Captured mistakes and anti-patterns to avoid. These are real issues we've encoun
 |----|-------|----------|-------------|
 | [LL-VALIDATION-001](lessons-learned/LL-VALIDATION-001-empty-url-segments.md) | Empty URL Segments | High | URL validation that checks segment count but not content allows malformed inputs |
 
+### Testing-Specific
+
+| ID | Title | Severity | Description |
+|----|-------|----------|-------------|
+| [LL-TESTING-001](lessons-learned/LL-TESTING-001-edge-case-coverage.md) | Missing Edge Case Tests | High | Basic happy-path tests passed but missed critical bugs: cumulative state tracking and boundary validation |
+
 ### By Category
 
 **Development Issues:**
 - LL-DRUPAL-001: Static Service Access
 - LL-PHP-001: Missing Type Declarations
 - LL-DEV-001: Docker-First Development
+
+**Testing Issues:**
+- LL-TESTING-001: Missing Edge Case Tests
 
 **Validation Issues:**
 - LL-VALIDATION-001: Empty URL Segments
@@ -219,19 +228,21 @@ grep -r "type declaration" .agent/ --include="*.md"
 
 ## 📊 Documentation Statistics
 
-**Total Documents**: 11
+**Total Documents**: 12
 - SOPs: 3
-- Lessons Learned: 5
+- Lessons Learned: 6
 - Templates: 3
 - System Docs: 0 (to be added)
 
 **Coverage by Category**:
 - Development: ✅ Well covered (3 SOPs, 2 lessons)
+- Testing: ✅ Covered (1 lesson)
 - Deployment: ⚠️ Not yet documented
 - Operations: ⚠️ Not yet documented
 - Security: ⚠️ Not yet documented
 
 **Most Recent Updates**:
+- 2025-01-10: Added LL-TESTING-001 (Missing Edge Case Tests)
 - 2025-10-09: Added LL-GIT-002 (No Direct Main Pushes)
 - 2025-10-09: Added LL-VALIDATION-001 (Empty URL Segments)
 - 2025-10-09: Updated DEVELOPMENT_RULES.md with PR-only workflow
