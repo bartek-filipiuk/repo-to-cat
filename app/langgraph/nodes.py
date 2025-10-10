@@ -28,18 +28,15 @@ from app.services.github_service import (
     fetch_file_contents
 )
 from app.services.analysis_service import AnalysisService
+from app.services.image_service import (
+    map_analysis_to_cat_attributes,
+    create_image_prompt,
+    save_image_locally
+)
 from app.providers.openrouter import OpenRouterProvider
 from app.providers.together_ai import TogetherProvider
 from app.core.database import SessionLocal
 from app.models.database import Generation
-from config.mappings import (
-    LANGUAGE_BACKGROUNDS,
-    DEFAULT_BACKGROUND,
-    CAT_SIZE_MAPPING,
-    CAT_AGE_MAPPING,
-    CAT_EXPRESSION_MAPPING,
-    get_language_background
-)
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -210,60 +207,9 @@ def map_attributes_node(state: WorkflowState) -> Dict[str, Any]:
 
     metadata = state["metadata"]
     analysis = state["analysis"]
-    quality_score = analysis["code_quality_score"]
-    repo_size_kb = metadata.get("size_kb", 0)
-    primary_language = metadata.get("primary_language", "Unknown")
 
-    # Map size (based on repository size)
-    size = "medium"  # default
-    for size_key, size_config in CAT_SIZE_MAPPING.items():
-        range_min, range_max = size_config["range"]
-        if range_min <= repo_size_kb <= range_max:
-            size = size_key
-            break
-
-    # Map age (simplified for MVP - based on quality score)
-    # Higher quality = more mature codebase = older cat
-    age = "young"  # default
-    if quality_score >= 8:
-        age = "senior"  # Excellent code = wise old cat
-    elif quality_score >= 6:
-        age = "adult"   # Good code = mature cat
-    elif quality_score >= 4:
-        age = "young"   # Average code = young cat
-    else:
-        age = "kitten"  # Poor code = inexperienced kitten
-
-    # Map expression (based on code quality and tests)
-    # For MVP, use quality score directly
-    expression = "neutral"  # default
-    has_tests = analysis.get("metrics", {}).get("has_tests", False)
-
-    if quality_score >= 8 and has_tests:
-        expression = "happy"      # Excellent code with tests
-    elif quality_score >= 6:
-        expression = "neutral"    # Good code
-    elif quality_score >= 4:
-        expression = "concerned"  # Mediocre code
-    else:
-        expression = "grumpy"     # Poor code
-
-    # Map background (based on language)
-    background = get_language_background(primary_language)
-
-    # Beauty score is directly the code quality score
-    beauty_score = quality_score
-
-    cat_attrs = {
-        "size": size,
-        "age": age,
-        "beauty_score": beauty_score,
-        "expression": expression,
-        "background": background,
-        "language": primary_language
-    }
-
-    logger.info(f"Cat attributes: {size} {age} cat, beauty={beauty_score}, expression={expression}")
+    # Use image service to map attributes
+    cat_attrs = map_analysis_to_cat_attributes(metadata, analysis)
 
     return {"cat_attrs": cat_attrs}
 
@@ -291,41 +237,11 @@ def generate_prompt_node(state: WorkflowState) -> Dict[str, Any]:
 
     cat_attrs = state["cat_attrs"]
 
-    # Get size description
-    size_desc = CAT_SIZE_MAPPING.get(cat_attrs["size"], {}).get("prompt_modifier", "cat")
-
-    # Get age description
-    age_desc = CAT_AGE_MAPPING.get(cat_attrs["age"], {}).get("description", "cat")
-
-    # Get expression description
-    expression_desc = CAT_EXPRESSION_MAPPING.get(cat_attrs["expression"], {}).get("description", "neutral expression")
-
-    # Get background
-    background = cat_attrs["background"]
-
-    # Beauty modifier based on score
-    beauty_score = cat_attrs["beauty_score"]
-    if beauty_score >= 8:
-        beauty_modifier = "beautiful, well-groomed"
-    elif beauty_score >= 6:
-        beauty_modifier = "pleasant-looking"
-    elif beauty_score >= 4:
-        beauty_modifier = "ordinary"
-    else:
-        beauty_modifier = "scruffy, disheveled"
-
-    # Construct prompt
-    prompt = (
-        f"A {beauty_modifier} {age_desc}, {size_desc} with a {expression_desc}. "
-        f"Background: {background}. "
-        f"Photorealistic, detailed fur texture, professional photography, 8k quality. "
-        f"The cat should look natural and lifelike."
-    )
+    # Use image service to create prompt
+    prompt = create_image_prompt(cat_attrs)
 
     # Update cat_attrs with prompt
     updated_cat_attrs = {**cat_attrs, "prompt": prompt}
-
-    logger.info(f"Generated prompt: {prompt[:100]}...")
 
     return {"cat_attrs": updated_cat_attrs}
 
@@ -339,7 +255,7 @@ def generate_image_node(state: WorkflowState) -> Dict[str, Any]:
     Generate cat image using Together.ai FLUX.1.1-pro.
 
     Calls Together.ai API with the generated prompt to create a cat image
-    reflecting the code quality.
+    reflecting the code quality, then saves it locally.
 
     Args:
         state: Current workflow state (requires cat_attrs with prompt)
@@ -354,13 +270,13 @@ def generate_image_node(state: WorkflowState) -> Dict[str, Any]:
 
     together = TogetherProvider()
     prompt = state["cat_attrs"]["prompt"]
+    generation_id = state["generation_id"]
 
     # Generate image (returns tuple of (url, base64_binary))
     image_url, image_binary = together.generate_cat_image(prompt)
 
-    # Construct image URL path
-    generation_id = state["generation_id"]
-    local_image_path = f"/images/{generation_id}.png"
+    # Save image locally using image service
+    local_image_path = save_image_locally(image_binary, generation_id)
 
     image_data = {
         "url": local_image_path,
@@ -369,7 +285,7 @@ def generate_image_node(state: WorkflowState) -> Dict[str, Any]:
         "original_url": image_url  # Together.ai URL
     }
 
-    logger.info(f"Image generated successfully: {image_url}")
+    logger.info(f"Image generated and saved successfully: {local_image_path}")
 
     return {"image": image_data}
 

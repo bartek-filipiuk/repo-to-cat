@@ -7,6 +7,7 @@ external dependencies (GitHub API, OpenRouter, Together.ai, Database).
 
 import pytest
 import uuid
+import base64
 from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime
 
@@ -38,6 +39,7 @@ class TestWorkflowCreation:
 class TestWorkflowExecution:
     """Tests for full workflow execution."""
 
+    @patch('app.langgraph.nodes.save_image_locally')
     @patch('app.langgraph.nodes.SessionLocal')
     @patch('app.langgraph.nodes.TogetherProvider')
     @patch('app.langgraph.nodes.AnalysisService')
@@ -55,7 +57,8 @@ class TestWorkflowExecution:
         mock_openrouter_class,
         mock_analysis_service_class,
         mock_together_class,
-        mock_session_class
+        mock_session_class,
+        mock_save_image
     ):
         """Test successful execution of the entire workflow."""
         # Mock 1: GitHub metadata
@@ -113,9 +116,11 @@ class TestWorkflowExecution:
         # Mock 7: Together.ai
         mock_together = Mock()
         mock_together_class.return_value = mock_together
+        # Use valid base64 data
+        valid_base64 = base64.b64encode(b"fake_image_data").decode("utf-8")
         mock_together.generate_cat_image.return_value = (
             "https://together.ai/image/uuid.png",
-            "base64-encoded-data"
+            valid_base64
         )
 
         # Mock 8: Database session
@@ -127,6 +132,9 @@ class TestWorkflowExecution:
 
         # Create input state
         generation_id = str(uuid.uuid4())
+
+        # Mock 7b: save_image_locally (after generation_id is created)
+        mock_save_image.return_value = f"/generated_images/{generation_id}.png"
         input_state: WorkflowState = {
             "github_url": "https://github.com/test-owner/test-repo",
             "generation_id": generation_id
@@ -158,13 +166,14 @@ class TestWorkflowExecution:
         assert "prompt" in result["cat_attrs"]
 
         # Verify image
-        assert result["image"]["url"] == f"/images/{generation_id}.png"
-        assert result["image"]["binary"] == "base64-encoded-data"
+        assert result["image"]["url"] == f"/generated_images/{generation_id}.png"
+        assert result["image"]["binary"] == valid_base64
 
         # Verify database was called
         mock_db.add.assert_called_once()
         mock_db.commit.assert_called_once()
 
+    @patch('app.langgraph.nodes.save_image_locally')
     @patch('app.langgraph.nodes.SessionLocal')
     @patch('app.langgraph.nodes.TogetherProvider')
     @patch('app.langgraph.nodes.AnalysisService')
@@ -182,7 +191,8 @@ class TestWorkflowExecution:
         mock_openrouter_class,
         mock_analysis_service_class,
         mock_together_class,
-        mock_session_class
+        mock_session_class,
+        mock_save_image
     ):
         """Test workflow with JavaScript repository."""
         # Mock JavaScript repo
@@ -220,10 +230,15 @@ class TestWorkflowExecution:
         # Mock image generation
         mock_together = Mock()
         mock_together_class.return_value = mock_together
+        # Use valid base64 data
+        valid_base64 = base64.b64encode(b"fake_image_data").decode("utf-8")
         mock_together.generate_cat_image.return_value = (
             "https://together.ai/image/uuid.png",
-            "base64-data"
+            valid_base64
         )
+
+        # Mock save_image_locally
+        mock_save_image.return_value = "/generated_images/test-uuid.png"
 
         # Mock database
         mock_db = Mock()
@@ -342,6 +357,7 @@ class TestWorkflowStateTransitions:
         with pytest.raises(Exception):
             workflow.invoke({})  # Missing both required fields
 
+    @patch('app.langgraph.nodes.save_image_locally')
     @patch('app.langgraph.nodes.SessionLocal')
     @patch('app.langgraph.nodes.TogetherProvider')
     @patch('app.langgraph.nodes.AnalysisService')
@@ -359,7 +375,8 @@ class TestWorkflowStateTransitions:
         mock_openrouter_class,
         mock_analysis_service_class,
         mock_together_class,
-        mock_session_class
+        mock_session_class,
+        mock_save_image
     ):
         """Test that generated prompt incorporates cat attributes."""
         # Setup mocks (minimal)
@@ -384,7 +401,12 @@ class TestWorkflowStateTransitions:
 
         mock_together = Mock()
         mock_together_class.return_value = mock_together
-        mock_together.generate_cat_image.return_value = ("url", "base64")
+        # Use valid base64 data
+        valid_base64 = base64.b64encode(b"fake_image_data").decode("utf-8")
+        mock_together.generate_cat_image.return_value = ("url", valid_base64)
+
+        # Mock save_image_locally
+        mock_save_image.return_value = "/generated_images/test-uuid.png"
 
         mock_db = Mock()
         mock_session_class.return_value = mock_db
