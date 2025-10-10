@@ -284,23 +284,33 @@ curl http://localhost:8000/health
 
 ## Stage 5: Code Analysis Service 🔍
 
-### 5.1 Analysis Logic
-- [ ] Create `app/services/analysis_service.py`
-- [ ] Implement `calculate_code_quality_score()` function
-- [ ] Implement line length analysis
-- [ ] Implement function length detection
-- [ ] Implement nesting depth detection
-- [ ] Implement comment ratio calculation
-- [ ] Implement test file detection
-- [ ] Implement type hints detection (Python-specific)
-- [ ] Write comprehensive unit tests
+### 5.1 Analysis Logic ✅
+- [x] Create `app/services/analysis_service.py`
+- [x] Implement `calculate_code_quality_score()` function
+- [x] Implement line length analysis
+- [x] Implement function length detection
+- [x] Implement nesting depth detection
+- [x] Implement comment ratio calculation
+- [x] Implement test file detection
+- [x] Implement type hints detection (Python-specific)
+- [x] Implement complexity scoring
+- [x] Write comprehensive unit tests
 
-### 5.2 LLM-Based Analysis
-- [ ] Implement `analyze_with_llm()` function
-- [ ] Create structured prompt for OpenRouter
-- [ ] Parse LLM response into structured metrics
-- [ ] Combine heuristics + LLM analysis
-- [ ] Write tests with sample code snippets
+### 5.2 LLM-Based Analysis ✅
+- [x] Implement `analyze_with_llm()` function
+- [x] Create structured prompt for OpenRouter (already done in provider)
+- [x] Parse LLM response into structured metrics (already done in provider)
+- [x] Combine heuristics + LLM analysis (30/70 weighting)
+- [x] Write tests with sample code snippets
+
+**Stage 5 Completion Checklist:**
+- [x] All checkboxes marked ✅
+- [x] Test: `pytest tests/unit/test_analysis_service.py -v` (37/37 passed ✅)
+- [x] Coverage: `pytest tests/unit/test_analysis_service.py --cov=app.services.analysis_service` (91% ≥80% ✅)
+- [x] Multi-language support: Python, JavaScript, TypeScript, Go, Rust, Java, C/C++, Ruby, PHP
+- [x] Weighted scoring: 30% heuristics + 70% LLM = final score
+- [x] Git: All changes ready on `feature/stage-5-analysis-service` branch
+- [ ] PR created to `main` branch
 
 ---
 
