@@ -189,7 +189,10 @@ class TestAnalyzeCodeNode:
         assert "analysis" in result
         assert result["analysis"]["code_quality_score"] == 7.5
         assert result["analysis"]["metrics"]["has_tests"] is True
-        mock_service.analyze_code_files.assert_called_once()
+        # Verify exact arguments to catch signature mismatches
+        mock_service.analyze_code_files.assert_called_once_with(
+            code_files=state["files"]
+        )
 
 
 class TestMapAttributesNode:

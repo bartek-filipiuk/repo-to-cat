@@ -174,8 +174,7 @@ def analyze_code_node(state: WorkflowState) -> Dict[str, Any]:
 
     # Analyze code files
     analysis_result = analysis_service.analyze_code_files(
-        code_files=state["files"],
-        primary_language=state["metadata"].get("primary_language", "Unknown")
+        code_files=state["files"]
     )
 
     # Convert AnalysisResult (Pydantic model) to dict
