@@ -373,18 +373,26 @@ class TestGeneratePromptNode:
 class TestGenerateImageNode:
     """Tests for generate_image_node."""
 
+    @patch('app.langgraph.nodes.save_image_locally')
     @patch('app.langgraph.nodes.TogetherProvider')
-    def test_generate_image_success(self, mock_together_class):
+    def test_generate_image_success(self, mock_together_class, mock_save_image):
         """Test successful image generation."""
         # Mock Together.ai provider
         mock_together = Mock()
         mock_together_class.return_value = mock_together
 
+        # Create valid base64 data
+        import base64
+        valid_base64 = base64.b64encode(b"fake_image_data").decode("utf-8")
+
         # Mock image generation response
         mock_together.generate_cat_image.return_value = (
             "https://together.ai/image/uuid-123.png",
-            "base64-encoded-image-data"
+            valid_base64
         )
+
+        # Mock save_image_locally
+        mock_save_image.return_value = "generated_images/test-uuid-123.png"
 
         # Create state
         state: WorkflowState = {
@@ -400,11 +408,12 @@ class TestGenerateImageNode:
 
         # Assertions
         assert "image" in result
-        assert result["image"]["url"] == "/images/test-uuid-123.png"
-        assert result["image"]["binary"] == "base64-encoded-image-data"
+        assert result["image"]["url"] == "generated_images/test-uuid-123.png"
+        assert result["image"]["binary"] == valid_base64
         assert result["image"]["prompt"] == "A beautiful cat with code"
         assert result["image"]["original_url"] == "https://together.ai/image/uuid-123.png"
         mock_together.generate_cat_image.assert_called_once_with("A beautiful cat with code")
+        mock_save_image.assert_called_once_with(valid_base64, "test-uuid-123")
 
 
 class TestSaveToDbNode:
