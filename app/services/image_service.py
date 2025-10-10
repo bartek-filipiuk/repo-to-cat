@@ -22,6 +22,7 @@ from config.mappings import (
     CAT_EXPRESSION_MAPPING,
     get_language_background
 )
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -225,7 +226,7 @@ def save_image_locally(base64_data: str, generation_id: str) -> str:
     """
     Save base64-encoded image to local filesystem.
 
-    Creates the generated_images directory if it doesn't exist,
+    Uses settings.IMAGE_STORAGE_PATH for the storage directory,
     decodes the base64 image data, and saves it as a PNG file
     with a UUID-based filename.
 
@@ -234,7 +235,7 @@ def save_image_locally(base64_data: str, generation_id: str) -> str:
         generation_id: UUID string for filename
 
     Returns:
-        str: Relative path to saved image (e.g., "generated_images/uuid.png")
+        str: Absolute URL path to image (e.g., "/generated_images/uuid.png")
 
     Raises:
         ImageServiceError: If image saving fails (permission, invalid data, etc.)
@@ -243,7 +244,7 @@ def save_image_locally(base64_data: str, generation_id: str) -> str:
         >>> import base64
         >>> image_data = base64.b64encode(b"fake_image").decode("utf-8")
         >>> path = save_image_locally(image_data, "550e8400-e29b-41d4-a716")
-        >>> "generated_images" in path
+        >>> path.startswith("/")
         True
         >>> ".png" in path
         True
@@ -264,8 +265,8 @@ def save_image_locally(base64_data: str, generation_id: str) -> str:
         except Exception as e:
             raise ImageServiceError(f"Failed to decode base64 data: {str(e)}")
 
-        # Define paths
-        images_dir = Path("generated_images")
+        # Define paths using settings
+        images_dir = Path(settings.IMAGE_STORAGE_PATH)
         filename = f"{generation_id}.png"
         file_path = images_dir / filename
 
@@ -284,12 +285,12 @@ def save_image_locally(base64_data: str, generation_id: str) -> str:
         except Exception as e:
             raise ImageServiceError(f"Failed to write image file: {str(e)}")
 
-        # Return relative path for database storage
-        relative_path = f"generated_images/{filename}"
+        # Return absolute URL path (with leading slash for API serving)
+        url_path = f"/generated_images/{filename}"
 
-        logger.info(f"Image saved successfully: {relative_path}")
+        logger.info(f"Image saved successfully to {file_path}, URL: {url_path}")
 
-        return relative_path
+        return url_path
 
     except ImageServiceError:
         # Re-raise ImageServiceError as-is

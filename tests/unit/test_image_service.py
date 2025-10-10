@@ -435,7 +435,8 @@ class TestSaveImageLocally:
         # Verify mkdir was called to ensure directory exists
         mock_mkdir.assert_called_once()
 
-        # Verify path contains generation_id and .png extension
+        # Verify path is absolute URL (starts with /) and contains generation_id
+        assert result_path.startswith("/")
         assert generation_id in result_path
         assert result_path.endswith(".png")
 
@@ -489,17 +490,18 @@ class TestSaveImageLocally:
 
     @patch("builtins.open", new_callable=mock_open)
     @patch("pathlib.Path.mkdir")
-    def test_returns_relative_path_format(self, mock_mkdir, mock_file):
-        """Test that returned path is in correct format for database storage."""
+    def test_returns_absolute_url_path_format(self, mock_mkdir, mock_file):
+        """Test that returned path is absolute URL for API serving."""
         base64_data = base64.b64encode(b"fake_image_data").decode("utf-8")
         generation_id = str(uuid.uuid4())
 
         result_path = save_image_locally(base64_data, generation_id)
 
-        # Path should start with /generated_images/ or generated_images/
-        assert "generated_images" in result_path
+        # Path should be absolute URL starting with /
+        assert result_path.startswith("/generated_images/")
         assert generation_id in result_path
         assert result_path.endswith(".png")
+        assert result_path == f"/generated_images/{generation_id}.png"
 
     @patch("builtins.open", new_callable=mock_open)
     @patch("pathlib.Path.mkdir")

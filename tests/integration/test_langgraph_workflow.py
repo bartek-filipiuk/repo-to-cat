@@ -134,7 +134,7 @@ class TestWorkflowExecution:
         generation_id = str(uuid.uuid4())
 
         # Mock 7b: save_image_locally (after generation_id is created)
-        mock_save_image.return_value = f"generated_images/{generation_id}.png"
+        mock_save_image.return_value = f"/generated_images/{generation_id}.png"
         input_state: WorkflowState = {
             "github_url": "https://github.com/test-owner/test-repo",
             "generation_id": generation_id
@@ -166,7 +166,7 @@ class TestWorkflowExecution:
         assert "prompt" in result["cat_attrs"]
 
         # Verify image
-        assert result["image"]["url"] == f"generated_images/{generation_id}.png"
+        assert result["image"]["url"] == f"/generated_images/{generation_id}.png"
         assert result["image"]["binary"] == valid_base64
 
         # Verify database was called
@@ -238,7 +238,7 @@ class TestWorkflowExecution:
         )
 
         # Mock save_image_locally
-        mock_save_image.return_value = "generated_images/test-uuid.png"
+        mock_save_image.return_value = "/generated_images/test-uuid.png"
 
         # Mock database
         mock_db = Mock()
@@ -406,7 +406,7 @@ class TestWorkflowStateTransitions:
         mock_together.generate_cat_image.return_value = ("url", valid_base64)
 
         # Mock save_image_locally
-        mock_save_image.return_value = "generated_images/test-uuid.png"
+        mock_save_image.return_value = "/generated_images/test-uuid.png"
 
         mock_db = Mock()
         mock_session_class.return_value = mock_db

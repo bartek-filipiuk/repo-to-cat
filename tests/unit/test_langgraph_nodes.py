@@ -392,7 +392,7 @@ class TestGenerateImageNode:
         )
 
         # Mock save_image_locally
-        mock_save_image.return_value = "generated_images/test-uuid-123.png"
+        mock_save_image.return_value = "/generated_images/test-uuid-123.png"
 
         # Create state
         state: WorkflowState = {
@@ -408,7 +408,7 @@ class TestGenerateImageNode:
 
         # Assertions
         assert "image" in result
-        assert result["image"]["url"] == "generated_images/test-uuid-123.png"
+        assert result["image"]["url"] == "/generated_images/test-uuid-123.png"
         assert result["image"]["binary"] == valid_base64
         assert result["image"]["prompt"] == "A beautiful cat with code"
         assert result["image"]["original_url"] == "https://together.ai/image/uuid-123.png"
