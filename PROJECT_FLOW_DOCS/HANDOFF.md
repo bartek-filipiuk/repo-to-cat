@@ -385,32 +385,47 @@ curl http://localhost:8000/health
 
 ---
 
-## Stage 8: API Endpoints 🌐
+## Stage 8: API Endpoints 🌐 ✅
 
-### 8.1 Health Check Endpoint
-- [ ] Create `app/api/routes.py`
-- [ ] Implement `GET /health` endpoint
-- [ ] Check GitHub API connectivity
-- [ ] Check OpenRouter API connectivity
-- [ ] Check Together.ai API connectivity
-- [ ] Check database connectivity
-- [ ] Measure response times
-- [ ] Write API tests for health endpoint
+### 8.1 Health Check Endpoint ✅
+- [x] Create `app/api/routes.py`
+- [x] Implement `GET /health` endpoint
+- [x] Check GitHub API connectivity
+- [x] Check OpenRouter API connectivity
+- [x] Check Together.ai API connectivity
+- [x] Check database connectivity
+- [x] Measure response times
+- [x] Write API tests for health endpoint
 
-### 8.2 Generate Endpoint
-- [ ] Implement `POST /generate` endpoint
-- [ ] Validate GitHub URL format
-- [ ] Trigger LangGraph workflow
-- [ ] Handle private repository errors (403)
-- [ ] Handle not found errors (404)
-- [ ] Handle analysis failures (500)
-- [ ] Return complete JSON response with image
-- [ ] Write comprehensive API tests
+### 8.2 Generate Endpoint ✅
+- [x] Implement `POST /generate` endpoint
+- [x] Validate GitHub URL format
+- [x] Trigger LangGraph workflow
+- [x] Handle private repository errors (403)
+- [x] Handle not found errors (404)
+- [x] Handle analysis failures (500)
+- [x] Return complete JSON response with image
+- [x] Write comprehensive API tests
 
-### 8.3 Static File Serving
-- [ ] Mount static files for `/generated_images/`
-- [ ] Add CORS headers for image access
-- [ ] Test image URL access from response
+### 8.3 Static File Serving ✅
+- [x] Mount static files for `/generated_images/`
+- [x] Add CORS headers for image access
+- [x] Test image URL access from response
+
+**Stage 8 Completion Checklist:**
+- [x] All checkboxes marked complete (✅)
+- [x] Test: `pytest tests/unit/test_routes.py -v` (19/19 passed ✅)
+- [x] Test: `pytest tests/unit/test_main.py -v` (10/10 passed ✅)
+- [x] Coverage: `pytest tests/unit/test_routes.py --cov=app.api.routes` (89% ≥80% ✅)
+- [x] Coverage: `pytest tests/unit/test_main.py --cov=app.main` (100% ≥80% ✅)
+- [x] Overall Stage 8 coverage: 90% (114/125 statements)
+- [x] Health endpoint checks all external services (GitHub, OpenRouter, Together.ai, DB)
+- [x] Generate endpoint triggers LangGraph workflow
+- [x] Error handling for 403, 404, 500 status codes
+- [x] Static file serving mounted at `/generated_images/`
+- [x] CORS already configured in main.py
+- [x] Git: All changes ready on `feature/stage-8-api-endpoints` branch
+- [ ] PR: Ready to create PR to `main` branch
 
 ---
 
