@@ -17,6 +17,7 @@ Nodes:
 
 import logging
 import uuid
+import base64
 from typing import Dict, Any
 from datetime import datetime
 
@@ -358,7 +359,10 @@ def save_to_db_node(state: WorkflowState) -> Dict[str, Any]:
             cat_attributes=state["cat_attrs"],
             analysis_data=state["analysis"],
             image_path=state["image"]["url"],
-            image_prompt=state["image"]["prompt"]
+            image_prompt=state["image"]["prompt"],
+            story=state.get("story"),
+            meme_text_top=state.get("meme_text_top"),
+            meme_text_bottom=state.get("meme_text_bottom")
         )
 
         db.add(generation)
@@ -376,3 +380,141 @@ def save_to_db_node(state: WorkflowState) -> Dict[str, Any]:
 
     finally:
         db.close()
+
+
+# ============================================================================
+# Node 9: Generate Story
+# ============================================================================
+
+def generate_story_node(state: WorkflowState) -> Dict[str, Any]:
+    """
+    Generate funny story about the repository.
+
+    Uses OpenRouter to create a 3-5 sentence humorous narrative about
+    the repository based on its characteristics and code quality.
+
+    Args:
+        state: Current workflow state (requires metadata, analysis, cat_attrs)
+
+    Returns:
+        dict: State update with story field
+
+    Raises:
+        Exception: If story generation fails (uses fallback story)
+    """
+    logger.info("Generating repository story")
+
+    from app.services.story_service import generate_repository_story
+
+    # Create provider
+    openrouter = OpenRouterProvider(api_key=settings.OPENROUTER_API_KEY)
+
+    # Generate story
+    story = generate_repository_story(
+        metadata=state["metadata"],
+        analysis=state["analysis"],
+        cat_attrs=state["cat_attrs"],
+        openrouter_provider=openrouter
+    )
+
+    logger.info(f"Story generated: {len(story)} characters")
+
+    return {"story": story}
+
+
+# ============================================================================
+# Node 10: Generate Meme Text
+# ============================================================================
+
+def generate_meme_text_node(state: WorkflowState) -> Dict[str, Any]:
+    """
+    Generate meme text for image overlay.
+
+    Uses OpenRouter to create short, funny text for top and bottom
+    of the cat image in classic meme style.
+
+    Args:
+        state: Current workflow state (requires metadata, analysis, cat_attrs)
+
+    Returns:
+        dict: State update with meme_text_top and meme_text_bottom fields
+
+    Raises:
+        Exception: If text generation fails (uses fallback text)
+    """
+    logger.info("Generating meme text")
+
+    from app.services.image_service import generate_meme_text
+
+    # Create provider
+    openrouter = OpenRouterProvider(api_key=settings.OPENROUTER_API_KEY)
+
+    # Generate meme text
+    top_text, bottom_text = generate_meme_text(
+        metadata=state["metadata"],
+        analysis=state["analysis"],
+        cat_attrs=state["cat_attrs"],
+        openrouter_provider=openrouter
+    )
+
+    logger.info(f"Meme text generated - TOP: '{top_text}', BOTTOM: '{bottom_text}'")
+
+    return {
+        "meme_text_top": top_text,
+        "meme_text_bottom": bottom_text
+    }
+
+
+# ============================================================================
+# Node 11: Add Text Overlay
+# ============================================================================
+
+def add_text_overlay_node(state: WorkflowState) -> Dict[str, Any]:
+    """
+    Add meme text overlay to generated image.
+
+    Takes the generated cat image and adds the meme text overlay
+    using PIL. Saves the modified image locally.
+
+    Args:
+        state: Current workflow state (requires image, meme_text_top, meme_text_bottom)
+
+    Returns:
+        dict: State update with modified image field
+
+    Raises:
+        ImageServiceError: If text overlay fails
+    """
+    logger.info("Adding text overlay to image")
+
+    from app.services.image_service import add_text_to_image
+
+    # Get image binary from state
+    image_binary_base64 = state["image"]["binary"]
+
+    # Decode base64 to bytes
+    image_bytes = base64.b64decode(image_binary_base64)
+
+    # Add text overlay
+    modified_bytes = add_text_to_image(
+        image_bytes=image_bytes,
+        top_text=state["meme_text_top"],
+        bottom_text=state["meme_text_bottom"]
+    )
+
+    # Encode back to base64
+    modified_base64 = base64.b64encode(modified_bytes).decode()
+
+    # Save modified image locally (overwrite original)
+    local_path = save_image_locally(modified_base64, state["generation_id"])
+
+    # Update image in state
+    updated_image = {
+        **state["image"],
+        "binary": modified_base64,
+        "url": local_path
+    }
+
+    logger.info(f"Text overlay added, image saved to {local_path}")
+
+    return {"image": updated_image}

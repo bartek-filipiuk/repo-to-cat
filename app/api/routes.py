@@ -290,6 +290,11 @@ async def generate(request: GenerateRequest, db: Session = Depends(get_db)):
                 "background": cat_attrs.get("background", "neutral background"),
                 "accessories": cat_attrs.get("accessories")
             },
+            "story": result.get("story"),
+            "meme_text": {
+                "top": result.get("meme_text_top", ""),
+                "bottom": result.get("meme_text_bottom", "")
+            } if result.get("meme_text_top") or result.get("meme_text_bottom") else None,
             "image": {
                 "url": image.get("url", ""),
                 "binary": image.get("binary", ""),

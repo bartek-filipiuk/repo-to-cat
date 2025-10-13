@@ -48,6 +48,9 @@ class Generation(Base):
     analysis_data = Column(JSONB, nullable=True)
     image_path = Column(Text, nullable=True)
     image_prompt = Column(Text, nullable=True)
+    story = Column(Text, nullable=True)
+    meme_text_top = Column(String(100), nullable=True)
+    meme_text_bottom = Column(String(100), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Indexes for performance (as per PRD.md requirements)

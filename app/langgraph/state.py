@@ -25,6 +25,9 @@ class WorkflowState(TypedDict):
         files: List of selected strategic files to analyze
         analysis: Code quality analysis results (score, metrics)
         cat_attrs: Mapped cat attributes (size, age, beauty, expression, background)
+        story: Funny story about the repository (3-5 sentences)
+        meme_text_top: Top meme text for image overlay
+        meme_text_bottom: Bottom meme text for image overlay
         image: Generated image data (url, binary, prompt)
         error: Error message if workflow fails (None if successful)
     """
@@ -38,6 +41,9 @@ class WorkflowState(TypedDict):
     files: NotRequired[List[Dict[str, str]]]
     analysis: NotRequired[Dict[str, Any]]
     cat_attrs: NotRequired[Dict[str, Any]]
+    story: NotRequired[str]
+    meme_text_top: NotRequired[str]
+    meme_text_bottom: NotRequired[str]
     image: NotRequired[Dict[str, str]]
 
     # Error tracking

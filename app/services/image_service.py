@@ -5,16 +5,23 @@ This service handles:
 1. Mapping code analysis results to cat attributes
 2. Creating image generation prompts
 3. Saving generated images locally
+4. Generating meme text overlays
+5. Adding text to images
 
 Functions:
 - map_analysis_to_cat_attributes() - Maps analysis → cat attributes
 - create_image_prompt() - Creates FLUX.1.1-pro prompt
 - save_image_locally() - Saves base64 image to disk
+- generate_meme_text() - Generates meme text for overlay
+- add_text_to_image() - Adds text overlay to image using PIL
 """
 import base64
 import logging
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Tuple
+from io import BytesIO
+
+from PIL import Image, ImageDraw, ImageFont
 
 from config.mappings import (
     CAT_SIZE_MAPPING,
@@ -301,6 +308,277 @@ def save_image_locally(base64_data: str, generation_id: str) -> str:
 
 
 # ============================================================================
+# Function 4: Generate Meme Text
+# ============================================================================
+
+def generate_meme_text(
+    metadata: Dict[str, Any],
+    analysis: Dict[str, Any],
+    cat_attrs: Dict[str, Any],
+    openrouter_provider
+) -> Tuple[str, str]:
+    """
+    Generate meme-style text for image overlay using OpenRouter.
+
+    Creates funny, short (2-4 words) text for top and bottom of image.
+    Uses LLM for creative, context-aware meme text generation.
+
+    Args:
+        metadata: Repository metadata dict
+            - name: Repository name
+            - primary_language: Main language
+            - size_kb: Size in KB
+        analysis: Code analysis results dict
+            - code_quality_score: Quality score (0-10)
+            - metrics: Dict with has_tests, etc.
+        cat_attrs: Cat attributes dict
+            - expression: Cat expression
+            - size: Cat size
+        openrouter_provider: OpenRouter API provider instance
+
+    Returns:
+        Tuple[str, str]: (top_text, bottom_text) - both uppercase, 2-4 words each
+
+    Example:
+        >>> metadata = {"primary_language": "Python", "size_kb": 1}
+        >>> analysis = {"code_quality_score": 5.6, "metrics": {"has_tests": False}}
+        >>> cat_attrs = {"expression": "concerned", "size": "small"}
+        >>> top, bottom = generate_meme_text(metadata, analysis, cat_attrs, provider)
+        >>> len(top.split()) <= 4
+        True
+    """
+    logger.info("Generating meme text for image overlay")
+
+    # Extract relevant info
+    language = metadata.get("primary_language", "Unknown")
+    quality_score = analysis.get("code_quality_score", 5.0)
+    has_tests = analysis.get("metrics", {}).get("has_tests", False)
+    expression = cat_attrs.get("expression", "neutral")
+    size = cat_attrs.get("size", "medium")
+
+    # Build prompt for OpenRouter
+    prompt = f"""Generate meme text (TOP and BOTTOM) for a repository cat image.
+
+Repository Info:
+- Language: {language}
+- Code Quality: {quality_score}/10
+- Has Tests: {"Yes" if has_tests else "No"}
+- Cat Expression: {expression}
+- Cat Size: {size}
+
+Requirements:
+- Generate TWO short phrases (2-4 words each)
+- Style: Meme format, funny, uppercase
+- TOP text: Usually about the language or main characteristic
+- BOTTOM text: Usually the punchline about code quality or tests
+- Be funny but friendly (no harsh insults)
+
+Examples:
+TOP: "PYTHON SPAGHETTI"
+BOTTOM: "NO TESTS FOUND"
+
+TOP: "HELLO WORLD"
+BOTTOM: "VERY CODE"
+
+TOP: "RUST SAFETY"
+BOTTOM: "ZERO DEFECTS"
+
+Generate meme text in this EXACT format:
+TOP: [your text here]
+BOTTOM: [your text here]"""
+
+    try:
+        # Call OpenRouter
+        response = openrouter_provider.generate_text(
+            prompt=prompt,
+            system_message="You are a meme text generator. Create funny, short phrases for top and bottom of images.",
+            temperature=0.8,
+            max_tokens=100
+        )
+
+        # Parse response
+        lines = [line.strip() for line in response.strip().split('\n') if line.strip()]
+
+        top_text = ""
+        bottom_text = ""
+
+        for line in lines:
+            if line.startswith("TOP:"):
+                top_text = line.replace("TOP:", "").strip().upper()
+            elif line.startswith("BOTTOM:"):
+                bottom_text = line.replace("BOTTOM:", "").strip().upper()
+
+        # Validate
+        if not top_text or not bottom_text:
+            raise ValueError("Could not parse TOP and BOTTOM from response")
+
+        logger.info(f"Generated meme text - TOP: '{top_text}', BOTTOM: '{bottom_text}'")
+        return (top_text, bottom_text)
+
+    except Exception as e:
+        logger.error(f"Failed to generate meme text: {str(e)}")
+        # Fallback meme text
+        lang_text = language.upper() if language else "CODE"
+        top_text = f"{lang_text} REPO"
+        bottom_text = "SUCH QUALITY" if quality_score >= 7 else "NEEDS WORK" if quality_score >= 4 else "OH NO"
+        logger.warning(f"Using fallback meme text: {top_text} / {bottom_text}")
+        return (top_text, bottom_text)
+
+
+# ============================================================================
+# Function 5: Add Text to Image
+# ============================================================================
+
+def add_text_to_image(
+    image_bytes: bytes,
+    top_text: str,
+    bottom_text: str,
+    font_size: int = 60,
+    stroke_width: int = 4
+) -> bytes:
+    """
+    Add meme-style text overlay to image using PIL.
+
+    Draws white text with black outline at top and bottom of image,
+    centered horizontally. Classic meme style.
+
+    Args:
+        image_bytes: Image data as bytes
+        top_text: Text for top (will be uppercased)
+        bottom_text: Text for bottom (will be uppercased)
+        font_size: Font size in points (default: 60)
+        stroke_width: Width of black outline (default: 4)
+
+    Returns:
+        bytes: Modified image as bytes
+
+    Raises:
+        ImageServiceError: If image processing fails
+
+    Example:
+        >>> with open("test.png", "rb") as f:
+        ...     img_bytes = f.read()
+        >>> result = add_text_to_image(img_bytes, "TOP TEXT", "BOTTOM TEXT")
+        >>> len(result) > 0
+        True
+    """
+    logger.info(f"Adding text overlay - TOP: '{top_text}', BOTTOM: '{bottom_text}'")
+
+    try:
+        # Load image from bytes
+        img = Image.open(BytesIO(image_bytes))
+        width, height = img.size
+
+        # Create drawing context
+        draw = ImageDraw.Draw(img)
+
+        # Load font (try Impact, fall back to default)
+        font = _find_font("impact.ttf", font_size)
+
+        # Convert text to uppercase
+        top_text = top_text.upper()
+        bottom_text = bottom_text.upper()
+
+        # Draw top text
+        if top_text:
+            bbox = draw.textbbox((0, 0), top_text, font=font)
+            text_width = bbox[2] - bbox[0]
+            top_x = (width - text_width) // 2
+            top_y = int(height * 0.05)
+
+            draw.text(
+                (top_x, top_y),
+                top_text,
+                font=font,
+                fill="white",
+                stroke_width=stroke_width,
+                stroke_fill="black"
+            )
+
+        # Draw bottom text
+        if bottom_text:
+            bbox = draw.textbbox((0, 0), bottom_text, font=font)
+            text_width = bbox[2] - bbox[0]
+            text_height = bbox[3] - bbox[1]
+            bottom_x = (width - text_width) // 2
+            bottom_y = height - text_height - int(height * 0.08)
+
+            draw.text(
+                (bottom_x, bottom_y),
+                bottom_text,
+                font=font,
+                fill="white",
+                stroke_width=stroke_width,
+                stroke_fill="black"
+            )
+
+        # Convert back to bytes
+        output = BytesIO()
+        img.save(output, format="PNG")
+        result_bytes = output.getvalue()
+
+        logger.info(f"Text overlay added successfully ({len(result_bytes)} bytes)")
+        return result_bytes
+
+    except Exception as e:
+        logger.error(f"Failed to add text overlay: {str(e)}")
+        raise ImageServiceError(f"Text overlay failed: {str(e)}")
+
+
+def _find_font(font_name: str, font_size: int):
+    """
+    Find and load a font, trying multiple common locations.
+
+    Args:
+        font_name: Font filename (e.g., "impact.ttf")
+        font_size: Font size in points
+
+    Returns:
+        ImageFont object
+    """
+    # Common font paths
+    font_paths = [
+        f"/usr/share/fonts/truetype/msttcorefonts/{font_name}",
+        f"/usr/share/fonts/TTF/{font_name}",
+        f"/usr/share/fonts/truetype/{font_name}",
+        f"/System/Library/Fonts/{font_name}",  # macOS
+        f"C:\\Windows\\Fonts\\{font_name}",     # Windows
+    ]
+
+    # Try each path
+    for font_path in font_paths:
+        try:
+            return ImageFont.truetype(font_path, font_size)
+        except (OSError, IOError):
+            continue
+
+    # Try without path
+    try:
+        return ImageFont.truetype(font_name, font_size)
+    except (OSError, IOError):
+        pass
+
+    # Fallback to DejaVu Sans Bold (widely available, supports sizing)
+    fallback_fonts = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf",
+        "/System/Library/Fonts/Helvetica.ttc",  # macOS
+        "C:\\Windows\\Fonts\\arialbd.ttf",      # Windows Arial Bold
+    ]
+
+    for fallback in fallback_fonts:
+        try:
+            logger.warning(f"Could not find {font_name}, using fallback: {fallback}")
+            return ImageFont.truetype(fallback, font_size)
+        except (OSError, IOError):
+            continue
+
+    # Last resort: default font (fixed size, doesn't respect font_size)
+    logger.error(f"No TrueType fonts found, using fixed-size default font")
+    return ImageFont.load_default()
+
+
+# ============================================================================
 # Module Exports
 # ============================================================================
 
@@ -308,5 +586,7 @@ __all__ = [
     "map_analysis_to_cat_attributes",
     "create_image_prompt",
     "save_image_locally",
+    "generate_meme_text",
+    "add_text_to_image",
     "ImageServiceError"
 ]
