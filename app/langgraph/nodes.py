@@ -131,11 +131,41 @@ def fetch_files_node(state: WorkflowState) -> Dict[str, Any]:
     """
     logger.info(f"Fetching contents for {len(state['files'])} files")
 
-    # Fetch file contents (returns list of dicts with path, content, language)
-    files_with_content = fetch_file_contents(
+    # Fetch file contents (returns dict mapping paths to contents)
+    file_contents_dict = fetch_file_contents(
         state["github_url"],
         state["files"]
     )
+
+    # Transform dict to list of dicts with path, content, language
+    files_with_content = []
+    for path, content in file_contents_dict.items():
+        # Determine language from file extension
+        language = "Unknown"
+        if path.endswith(".py"):
+            language = "Python"
+        elif path.endswith((".js", ".jsx")):
+            language = "JavaScript"
+        elif path.endswith((".ts", ".tsx")):
+            language = "TypeScript"
+        elif path.endswith(".go"):
+            language = "Go"
+        elif path.endswith(".rs"):
+            language = "Rust"
+        elif path.endswith(".java"):
+            language = "Java"
+        elif path.endswith((".c", ".cpp", ".cc", ".h", ".hpp")):
+            language = "C/C++"
+        elif path.endswith(".rb"):
+            language = "Ruby"
+        elif path.endswith(".php"):
+            language = "PHP"
+
+        files_with_content.append({
+            "path": path,
+            "content": content,
+            "language": language
+        })
 
     logger.info(f"Fetched {len(files_with_content)} file contents")
 
@@ -166,7 +196,7 @@ def analyze_code_node(state: WorkflowState) -> Dict[str, Any]:
     logger.info("Analyzing code quality")
 
     # Create analysis service
-    openrouter = OpenRouterProvider()
+    openrouter = OpenRouterProvider(api_key=settings.OPENROUTER_API_KEY)
     analysis_service = AnalysisService(openrouter_provider=openrouter)
 
     # Analyze code files
@@ -268,7 +298,7 @@ def generate_image_node(state: WorkflowState) -> Dict[str, Any]:
     """
     logger.info("Generating cat image")
 
-    together = TogetherProvider()
+    together = TogetherProvider(api_key=settings.TOGETHER_API_KEY)
     prompt = state["cat_attrs"]["prompt"]
     generation_id = state["generation_id"]
 

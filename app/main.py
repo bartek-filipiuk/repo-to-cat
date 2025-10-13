@@ -14,6 +14,12 @@ from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.api.routes import router
 
+# Load environment variables from settings into os.environ
+# This ensures that os.getenv() calls work correctly
+os.environ["GITHUB_TOKEN"] = settings.GITHUB_TOKEN
+os.environ["OPENROUTER_API_KEY"] = settings.OPENROUTER_API_KEY
+os.environ["TOGETHER_API_KEY"] = settings.TOGETHER_API_KEY
+
 # Initialize FastAPI app
 app = FastAPI(
     title="Repo-to-Cat API",

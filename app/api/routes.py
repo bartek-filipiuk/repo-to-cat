@@ -273,7 +273,7 @@ async def generate(request: GenerateRequest, db: Session = Depends(get_db)):
                 "url": request.github_url,
                 "name": metadata.get("name", ""),
                 "owner": metadata.get("owner", ""),
-                "primary_language": metadata.get("primary_language", "Unknown"),
+                "primary_language": metadata.get("primary_language") or "Unknown",
                 "size_kb": metadata.get("size_kb", 0),
                 "stars": metadata.get("stars")
             },
