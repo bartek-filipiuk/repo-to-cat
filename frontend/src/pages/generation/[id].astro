@@ -1,0 +1,207 @@
+---
+/**
+ * Generation Detail Page
+ *
+ * Public page showing full generation details including image, story, and repo data.
+ * Shareable without authentication.
+ */
+
+import Layout from '../../components/Layout.astro';
+import { getSession } from '../../lib/auth';
+import { api } from '../../lib/api';
+
+const { id } = Astro.params;
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000';
+
+if (!id) {
+  return Astro.redirect('/');
+}
+
+// Get user (optional for this public page)
+const user = await getSession(Astro);
+
+// Fetch generation details
+let generation = null;
+let error: string | null = null;
+
+try {
+  const response = await api.getGeneration(id);
+  generation = response.generation;
+
+  if (response.status === 'processing') {
+    error = 'This generation is still being processed. Please check back in a moment.';
+  }
+} catch (err: any) {
+  error = err.message || 'Generation not found';
+}
+
+// Format date
+const createdDate = generation?.created_at
+  ? new Date(generation.created_at).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  : null;
+---
+
+<Layout title={generation?.repository.name || 'Generation'} user={user} showHeader={!!user}>
+  {error ? (
+    <!-- Error State -->
+    <div class="text-center py-16">
+      <svg class="w-24 h-24 mx-auto text-red-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <h1 class="text-2xl font-bold text-oxide-text mb-2">Error</h1>
+      <p class="text-oxide-text-dim">{error}</p>
+      <a href="/" class="btn-primary inline-block mt-6">
+        Back to Dashboard
+      </a>
+    </div>
+  ) : generation ? (
+    <div>
+      <!-- Back Button -->
+      {user && (
+        <a href="/" class="text-oxide-green hover:text-oxide-green-dim transition-colors inline-flex items-center gap-2 mb-6">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back to Dashboard
+        </a>
+      )}
+
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-4xl font-bold text-oxide-text mb-2">
+          {generation.repository.name || 'Unknown Repository'}
+        </h1>
+        <div class="flex items-center gap-4 text-oxide-text-dim">
+          <span>{generation.repository.owner || 'Unknown Owner'}</span>
+          {generation.repository.primary_language && (
+            <>
+              <span>"</span>
+              <span>{generation.repository.primary_language}</span>
+            </>
+          )}
+          {generation.analysis.code_quality_score && (
+            <>
+              <span>"</span>
+              <span class="text-oxide-green font-semibold">
+                Quality Score: {generation.analysis.code_quality_score.toFixed(1)}
+              </span>
+            </>
+          )}
+        </div>
+        {createdDate && (
+          <p class="text-oxide-text-darker text-sm mt-2">
+            Generated {createdDate}
+          </p>
+        )}
+      </div>
+
+      <!-- Image -->
+      {generation.image?.path && (
+        <div class="mb-12 rounded-lg overflow-hidden bg-oxide-gray">
+          <img
+            src={`${API_URL}${generation.image.path}`}
+            alt={`Cat for ${generation.repository.name}`}
+            class="w-full h-auto max-h-[600px] object-contain"
+          />
+        </div>
+      )}
+
+      <!-- Meme Text -->
+      {generation.meme_text && (generation.meme_text.top || generation.meme_text.bottom) && (
+        <div class="card mb-8">
+          <h2 class="text-2xl font-semibold text-oxide-text mb-4">Meme Text</h2>
+          {generation.meme_text.top && (
+            <p class="text-xl font-bold text-oxide-green mb-2 text-center">
+              {generation.meme_text.top}
+            </p>
+          )}
+          {generation.meme_text.bottom && (
+            <p class="text-xl font-bold text-oxide-green text-center">
+              {generation.meme_text.bottom}
+            </p>
+          )}
+        </div>
+      )}
+
+      <!-- Story -->
+      {generation.story && (
+        <div class="card mb-8">
+          <h2 class="text-2xl font-semibold text-oxide-text mb-4">Story</h2>
+          <p class="text-oxide-text leading-relaxed whitespace-pre-wrap">
+            {generation.story}
+          </p>
+        </div>
+      )}
+
+      <!-- Repository Data -->
+      <div class="card">
+        <h2 class="text-2xl font-semibold text-oxide-text mb-4">Repository Details</h2>
+        <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {generation.repository.owner && (
+            <div>
+              <dt class="text-oxide-text-dim text-sm">Owner</dt>
+              <dd class="text-oxide-text font-medium">{generation.repository.owner}</dd>
+            </div>
+          )}
+          {generation.repository.name && (
+            <div>
+              <dt class="text-oxide-text-dim text-sm">Repository</dt>
+              <dd class="text-oxide-text font-medium">{generation.repository.name}</dd>
+            </div>
+          )}
+          {generation.repository.primary_language && (
+            <div>
+              <dt class="text-oxide-text-dim text-sm">Primary Language</dt>
+              <dd class="text-oxide-text font-medium">{generation.repository.primary_language}</dd>
+            </div>
+          )}
+          {generation.repository.size_kb && (
+            <div>
+              <dt class="text-oxide-text-dim text-sm">Repository Size</dt>
+              <dd class="text-oxide-text font-medium">{(generation.repository.size_kb / 1024).toFixed(2)} MB</dd>
+            </div>
+          )}
+          {generation.analysis.code_quality_score && (
+            <div>
+              <dt class="text-oxide-text-dim text-sm">Code Quality Score</dt>
+              <dd class="text-oxide-text font-medium">{generation.analysis.code_quality_score.toFixed(1)} / 10</dd>
+            </div>
+          )}
+          <div>
+            <dt class="text-oxide-text-dim text-sm">GitHub URL</dt>
+            <dd>
+              <a
+                href={generation.github_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-oxide-green hover:text-oxide-green-dim transition-colors"
+              >
+                {generation.github_url}
+              </a>
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <!-- Cat Attributes -->
+      {generation.cat_attributes && (
+        <div class="card mt-8">
+          <h2 class="text-2xl font-semibold text-oxide-text mb-4">Cat Attributes</h2>
+          <div class="flex flex-wrap gap-2">
+            {Object.entries(generation.cat_attributes).map(([key, value]) => (
+              <span class="bg-oxide-gray-light text-oxide-text-dim px-3 py-1 rounded text-sm">
+                <span class="font-medium">{key}:</span> {String(value)}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  ) : null}
+</Layout>

@@ -1,0 +1,47 @@
+---
+/**
+ * Generation List Component
+ *
+ * Displays a grid of generation cards.
+ * Responsive: 3 columns (desktop), 2 columns (tablet), 1 column (mobile).
+ */
+
+import GenerationCard from './GenerationCard.astro';
+import type { GenerationListItem } from '../lib/api';
+
+interface Props {
+  generations: GenerationListItem[];
+}
+
+const { generations } = Astro.props;
+---
+
+<div class="my-8">
+  {generations.length === 0 ? (
+    <!-- Empty State -->
+    <div class="text-center py-16">
+      <svg class="w-24 h-24 mx-auto text-oxide-text-dim mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      <h3 class="text-xl font-semibold text-oxide-text mb-2">
+        No Generations Yet
+      </h3>
+      <p class="text-oxide-text-dim">
+        Submit a GitHub URL above to generate your first cat image!
+      </p>
+    </div>
+  ) : (
+    <!-- Grid -->
+    <div>
+      <h2 class="text-2xl font-semibold text-oxide-text mb-6">
+        Your Generations ({generations.length})
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {generations.map((generation) => (
+          <GenerationCard generation={generation} />
+        ))}
+      </div>
+    </div>
+  )}
+</div>

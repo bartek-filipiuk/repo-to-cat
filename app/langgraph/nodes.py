@@ -350,6 +350,7 @@ def save_to_db_node(state: WorkflowState) -> Dict[str, Any]:
     try:
         generation = Generation(
             id=uuid.UUID(state["generation_id"]),
+            user_id=uuid.UUID(state["user_id"]),
             github_url=state["github_url"],
             repo_owner=state["metadata"].get("owner"),
             repo_name=state["metadata"].get("name"),

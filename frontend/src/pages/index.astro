@@ -1,0 +1,68 @@
+---
+/**
+ * Dashboard Page
+ *
+ * Protected page showing generation form and user's past generations.
+ */
+
+import Layout from '../components/Layout.astro';
+import GenerateForm from '../components/GenerateForm.astro';
+import GenerationList from '../components/GenerationList.astro';
+import { requireAuth } from '../lib/auth';
+import { api } from '../lib/api';
+
+// Require authentication
+const user = await requireAuth(Astro);
+
+// Fetch user's generations with proper cookie forwarding for SSR
+let generations = [];
+let error: string | null = null;
+
+try {
+  // Get session cookie from request headers
+  const cookies = Astro.request.headers.get('cookie');
+  const apiUrl = import.meta.env.API_URL || 'http://localhost:8000';
+
+  const response = await fetch(`${apiUrl}/generations?limit=50&offset=0`, {
+    headers: {
+      'Cookie': cookies || '',
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch generations');
+  }
+
+  const data = await response.json();
+  generations = data.generations || [];
+} catch (err: any) {
+  console.error('Failed to fetch generations:', err);
+  error = 'Failed to load your generations. Please refresh the page.';
+}
+---
+
+<Layout title="Dashboard" user={user}>
+  <!-- Welcome Section -->
+  <div class="mb-8">
+    <h1 class="text-4xl font-bold text-oxide-text mb-2">
+      Welcome back, <span class="text-oxide-green">{user.username}</span>
+    </h1>
+    <p class="text-oxide-text-dim">
+      Generate cat images from GitHub repositories and view your past creations.
+    </p>
+  </div>
+
+  <!-- Generate Form -->
+  <GenerateForm />
+
+  <!-- Error Message -->
+  {error && (
+    <div class="bg-red-900/20 border border-red-500/50 text-red-400 px-4 py-3 rounded my-8">
+      {error}
+    </div>
+  )}
+
+  <!-- Generation List -->
+  <GenerationList generations={generations} />
+</Layout>

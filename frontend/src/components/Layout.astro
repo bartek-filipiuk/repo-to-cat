@@ -1,0 +1,48 @@
+---
+/**
+ * Base Layout Component
+ *
+ * Provides HTML structure, global styles, and header for all pages.
+ */
+
+import Header from './Header.astro';
+import type { User } from '../lib/auth';
+
+interface Props {
+  title: string;
+  user?: User | null;
+  showHeader?: boolean;
+}
+
+const { title, user, showHeader = true } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Repo-to-Cat - Visualize GitHub repository quality as cat images">
+  <title>{title} - Repo-to-Cat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-oxide-dark min-h-screen text-oxide-text font-sans">
+  {showHeader && user && <Header user={user} />}
+
+  <main class="container mx-auto px-4 py-8 max-w-container">
+    <slot />
+  </main>
+
+  <footer class="border-t border-oxide-gray mt-16 py-8">
+    <div class="container mx-auto px-4 text-center text-oxide-text-dim text-sm">
+      <p>&copy; {new Date().getFullYear()} Repo-to-Cat. Visualize code quality as cats.</p>
+    </div>
+  </footer>
+</body>
+</html>
+
+<style is:global>
+  @import '../styles/global.css';
+</style>

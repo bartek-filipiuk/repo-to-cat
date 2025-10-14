@@ -21,6 +21,7 @@ eggs/
 .eggs/
 lib/
 lib64/
+!frontend/src/lib/
 parts/
 sdist/
 var/
@@ -68,3 +69,9 @@ logs/
 
 # Alembic
 alembic/versions/*.pyc
+
+# Frontend (Astro)
+frontend/.env
+frontend/node_modules/
+frontend/dist/
+frontend/.astro/

@@ -1,0 +1,158 @@
+---
+/**
+ * Generate Form Component
+ *
+ * Form to submit GitHub URL and poll for generation completion.
+ */
+---
+
+<div class="card max-w-2xl mx-auto">
+  <h2 class="text-2xl font-semibold text-oxide-text mb-4">Generate Cat Image</h2>
+  <p class="text-oxide-text-dim mb-6">
+    Enter a GitHub repository URL to generate a cat image based on code quality.
+  </p>
+
+  <form id="generateForm" class="mb-4">
+    <div class="flex gap-2">
+      <input
+        type="url"
+        id="githubUrl"
+        name="github_url"
+        placeholder="https://github.com/owner/repo"
+        class="input flex-1"
+        required
+        pattern="https://github\.com/[^/]+/[^/]+"
+      />
+      <button type="submit" class="btn-primary">
+        Generate
+      </button>
+    </div>
+  </form>
+
+  <!-- Status Messages -->
+  <div id="statusMessage" class="hidden"></div>
+
+  <!-- Loading Spinner -->
+  <div id="loadingSpinner" class="hidden text-center py-8">
+    <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-oxide-green"></div>
+    <p class="text-oxide-text-dim mt-4">Analyzing repository... This may take 15-25 seconds</p>
+    <p class="text-oxide-text-darker text-sm mt-2" id="pollingStatus">Checking status...</p>
+  </div>
+</div>
+
+<script>
+  const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000';
+
+  const form = document.getElementById('generateForm') as HTMLFormElement;
+  const statusMessage = document.getElementById('statusMessage') as HTMLDivElement;
+  const loadingSpinner = document.getElementById('loadingSpinner') as HTMLDivElement;
+  const pollingStatus = document.getElementById('pollingStatus') as HTMLParagraphElement;
+  const githubUrlInput = document.getElementById('githubUrl') as HTMLInputElement;
+
+  let pollingInterval: number | null = null;
+  let pollCount = 0;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const githubUrl = githubUrlInput.value.trim();
+
+    if (!githubUrl) {
+      showError('Please enter a GitHub URL');
+      return;
+    }
+
+    // Reset state
+    statusMessage.classList.add('hidden');
+    loadingSpinner.classList.remove('hidden');
+    form.classList.add('opacity-50', 'pointer-events-none');
+    pollCount = 0;
+
+    try {
+      // Submit generation request
+      const response = await fetch(`${API_URL}/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ github_url: githubUrl }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Generation failed');
+      }
+
+      const data = await response.json();
+      const generationId = data.generation_id;
+
+      // Start polling for completion
+      startPolling(generationId);
+    } catch (error: any) {
+      console.error('Generation error:', error);
+      showError(error.message || 'Failed to start generation');
+      resetForm();
+    }
+  });
+
+  function startPolling(generationId: string) {
+    pollingInterval = window.setInterval(async () => {
+      pollCount++;
+      pollingStatus.textContent = `Checking status... (${pollCount * 2}s)`;
+
+      try {
+        const response = await fetch(`${API_URL}/generation/${generationId}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to check status');
+        }
+
+        const data = await response.json();
+
+        if (data.status === 'completed') {
+          // Generation complete - redirect to detail page
+          stopPolling();
+          window.location.href = `/generation/${generationId}`;
+        } else if (pollCount >= 30) {
+          // Timeout after 60 seconds
+          throw new Error('Generation timed out. Please try again.');
+        }
+      } catch (error: any) {
+        console.error('Polling error:', error);
+        stopPolling();
+        showError(error.message || 'Failed to check generation status');
+        resetForm();
+      }
+    }, 2000); // Poll every 2 seconds
+  }
+
+  function stopPolling() {
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      pollingInterval = null;
+    }
+  }
+
+  function showError(message: string) {
+    statusMessage.className = 'bg-red-900/20 border border-red-500/50 text-red-400 px-4 py-3 rounded';
+    statusMessage.textContent = message;
+    statusMessage.classList.remove('hidden');
+  }
+
+  function showSuccess(message: string) {
+    statusMessage.className = 'bg-green-900/20 border border-green-500/50 text-green-400 px-4 py-3 rounded';
+    statusMessage.textContent = message;
+    statusMessage.classList.remove('hidden');
+  }
+
+  function resetForm() {
+    loadingSpinner.classList.add('hidden');
+    form.classList.remove('opacity-50', 'pointer-events-none');
+  }
+
+  // Cleanup on page unload
+  window.addEventListener('beforeunload', () => {
+    stopPolling();
+  });
+</script>

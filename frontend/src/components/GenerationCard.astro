@@ -1,0 +1,94 @@
+---
+/**
+ * Generation Card Component
+ *
+ * Displays a single generation in a card format for the dashboard grid.
+ */
+
+import type { GenerationListItem } from '../lib/api';
+
+interface Props {
+  generation: GenerationListItem;
+}
+
+const { generation } = Astro.props;
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000';
+
+// Extract repo info from github_url if not available
+const repoName = generation.repo_name || generation.github_url.split('/').pop() || 'Unknown';
+const repoOwner = generation.repo_owner || generation.github_url.split('/').slice(-2)[0] || 'Unknown';
+
+// Format date
+const createdDate = generation.created_at
+  ? new Date(generation.created_at).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  : 'Unknown date';
+
+// Quality score badge color
+const getScoreBadgeClass = (score: number | null) => {
+  if (!score) return 'bg-oxide-gray-light text-oxide-text-dim';
+  if (score >= 8) return 'bg-oxide-green/20 text-oxide-green border border-oxide-green/30';
+  if (score >= 6) return 'bg-yellow-900/20 text-yellow-400 border border-yellow-500/30';
+  return 'bg-red-900/20 text-red-400 border border-red-500/30';
+};
+
+const scoreBadgeClass = getScoreBadgeClass(generation.code_quality_score);
+---
+
+<a
+  href={`/generation/${generation.id}`}
+  class="card-interactive group block"
+>
+  <!-- Image -->
+  <div class="aspect-square mb-4 rounded overflow-hidden bg-oxide-darker flex items-center justify-center">
+    {generation.image_path ? (
+      <img
+        src={`${API_URL}${generation.image_path}`}
+        alt={`Cat for ${repoName}`}
+        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
+      />
+    ) : (
+      <div class="text-oxide-text-dim text-center p-4">
+        <svg class="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <p class="text-sm">Processing...</p>
+      </div>
+    )}
+  </div>
+
+  <!-- Info -->
+  <div class="space-y-2">
+    <!-- Repo Name -->
+    <h3 class="text-lg font-semibold text-oxide-text group-hover:text-oxide-green transition-colors truncate">
+      {repoName}
+    </h3>
+
+    <!-- Owner -->
+    <p class="text-sm text-oxide-text-dim truncate">
+      {repoOwner}
+    </p>
+
+    <!-- Quality Score & Language -->
+    <div class="flex items-center justify-between gap-2">
+      {generation.code_quality_score !== null && (
+        <span class={`text-xs px-2 py-1 rounded ${scoreBadgeClass}`}>
+          Score: {generation.code_quality_score.toFixed(1)}
+        </span>
+      )}
+      {generation.primary_language && (
+        <span class="text-xs text-oxide-text-darker">
+          {generation.primary_language}
+        </span>
+      )}
+    </div>
+
+    <!-- Date -->
+    <p class="text-xs text-oxide-text-darker">
+      {createdDate}
+    </p>
+  </div>
+</a>
