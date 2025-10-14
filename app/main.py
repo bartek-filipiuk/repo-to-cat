@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.api.routes import router
+from app.api.auth import router as auth_router
 
 # Load environment variables from settings into os.environ
 # This ensures that os.getenv() calls work correctly
@@ -35,6 +36,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",  # React dev server
+        "http://localhost:4321",  # Astro dev server
         "http://localhost:8000",  # API itself
         "http://localhost:8080",  # Alternative frontend port
     ],
@@ -56,6 +58,7 @@ app.mount(
 
 # Include API routes
 app.include_router(router)
+app.include_router(auth_router)
 
 
 @app.get("/")

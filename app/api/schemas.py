@@ -302,6 +302,126 @@ class HealthCheckResponse(BaseModel):
 
 
 # ============================================================================
+# AUTHENTICATION SCHEMAS
+# ============================================================================
+
+class LoginRequest(BaseModel):
+    """
+    Request schema for POST /auth/login endpoint.
+
+    Validates username and password for authentication.
+    """
+    username: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+        description="Username for authentication"
+    )
+    password: str = Field(
+        ...,
+        min_length=1,
+        description="Password for authentication"
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "username": "testuser",
+                "password": "securepassword123"
+            }
+        }
+    )
+
+
+class UserResponse(BaseModel):
+    """
+    User information response schema.
+
+    Returns public user data (no sensitive fields like password_hash).
+    """
+    id: str = Field(..., description="User UUID")
+    username: str = Field(..., description="Username")
+    email: Optional[str] = Field(None, description="User email (if set)")
+    created_at: datetime = Field(..., description="Account creation timestamp")
+
+    model_config = ConfigDict(
+        from_attributes=True,  # Allow creation from ORM models
+        json_schema_extra={
+            "example": {
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "username": "testuser",
+                "email": "test@example.com",
+                "created_at": "2025-10-07T12:34:56Z"
+            }
+        }
+    )
+
+
+class LoginResponse(BaseModel):
+    """
+    Response schema for successful login.
+
+    Returns user information. Session token is set as httpOnly cookie.
+    """
+    success: bool = Field(..., description="Login success status")
+    message: str = Field(..., description="Success message")
+    user: UserResponse = Field(..., description="Authenticated user information")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "success": True,
+                "message": "Login successful",
+                "user": {
+                    "id": "550e8400-e29b-41d4-a716-446655440000",
+                    "username": "testuser",
+                    "email": "test@example.com",
+                    "created_at": "2025-10-07T12:34:56Z"
+                }
+            }
+        }
+    )
+
+
+class LogoutResponse(BaseModel):
+    """
+    Response schema for logout endpoint.
+    """
+    success: bool = Field(..., description="Logout success status")
+    message: str = Field(..., description="Success message")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "success": True,
+                "message": "Logged out successfully"
+            }
+        }
+    )
+
+
+class ErrorResponse(BaseModel):
+    """
+    Standard error response schema.
+
+    Used for consistent error handling across all endpoints.
+    """
+    success: bool = Field(False, description="Always False for errors")
+    error: str = Field(..., description="Error message")
+    detail: Optional[str] = Field(None, description="Additional error details")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "success": False,
+                "error": "Authentication failed",
+                "detail": "Invalid username or password"
+            }
+        }
+    )
+
+
+# ============================================================================
 # MODULE EXPORTS
 # ============================================================================
 
@@ -314,4 +434,9 @@ __all__ = [
     "ImageData",
     "MemeText",
     "HealthCheckResponse",
+    "LoginRequest",
+    "LoginResponse",
+    "LogoutResponse",
+    "UserResponse",
+    "ErrorResponse",
 ]

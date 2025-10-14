@@ -27,9 +27,20 @@ Repo-to-Cat exposes a FastAPI REST API for analyzing GitHub repositories and gen
 
 ## Authentication
 
-**Current:** No authentication required (development mode)
+**System:** Session-based authentication with httpOnly cookies
 
-**Future:** API keys or OAuth2 will be added in production deployment.
+**Implementation:** Bcrypt password hashing, 7-day session tokens
+
+**Protected Endpoints:**
+- POST /generate (requires authentication)
+- GET /generations (requires authentication)
+
+**Public Endpoints:**
+- GET /health (public)
+- GET /auth/login, /auth/logout, /auth/me, /auth/status (auth management)
+- GET /generation/:id (public, shareable)
+
+**Session Cookie:** `session_token` (httpOnly, secure in production, sameSite=lax, 7-day expiration)
 
 ---
 
@@ -396,6 +407,307 @@ curl -X POST http://localhost:8000/generate \
 
 - Currently: No caching (always fresh analysis)
 - Future: Will cache results by repo URL + commit SHA for repeated requests
+
+---
+
+## Authentication Endpoints
+
+### 3. POST /auth/login
+
+Authenticate user and create session.
+
+**Purpose:** Login with username/password, receive httpOnly session cookie
+
+**Method:** `POST`
+
+**URL:** `/auth/login`
+
+**Request Headers:**
+```
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "username": "testuser",
+  "password": "securepassword123"
+}
+```
+
+**Request Schema:**
+
+| Field | Type | Required | Description | Validation |
+|-------|------|----------|-------------|-----------|
+| `username` | string | Yes | User's username | 1-255 characters |
+| `password` | string | Yes | User's password | Min 1 character |
+
+**Response Codes:**
+
+| Code | Status | Description |
+|------|--------|-------------|
+| `200` | OK | Login successful, session cookie set |
+| `401` | Unauthorized | Invalid username or password |
+| `422` | Unprocessable Entity | Missing required fields |
+
+**Response Body (Success):**
+
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "username": "testuser",
+    "email": "test@example.com",
+    "created_at": "2025-10-07T12:34:56Z"
+  }
+}
+```
+
+**Response Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `success` | boolean | Always true for successful login |
+| `message` | string | Success message |
+| `user.id` | string | User UUID |
+| `user.username` | string | Username |
+| `user.email` | string | Email (null if not set) |
+| `user.created_at` | string | ISO 8601 account creation timestamp |
+
+**Session Cookie:**
+
+The `session_token` cookie is set with the following properties:
+- **Name:** `session_token`
+- **Value:** 64-character hex token
+- **httpOnly:** `true` (prevents XSS attacks)
+- **secure:** `false` (development), `true` (production with HTTPS)
+- **sameSite:** `lax` (CSRF protection)
+- **maxAge:** 604800 seconds (7 days)
+
+**Error Response (401):**
+
+```json
+{
+  "detail": "Invalid username or password"
+}
+```
+
+**Example Request:**
+
+```bash
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "testuser", "password": "mypassword"}' \
+  -c cookies.txt
+```
+
+**Notes:**
+- Password is hashed with bcrypt (never stored in plain text)
+- Session token is cryptographically random (64-char hex)
+- Multiple concurrent sessions allowed (login doesn't invalidate existing sessions)
+- Cookies persist across browser restarts (7-day expiration)
+
+---
+
+### 4. POST /auth/logout
+
+Logout user and delete session.
+
+**Purpose:** Destroy session and clear session cookie
+
+**Method:** `POST`
+
+**URL:** `/auth/logout`
+
+**Request Headers:** None required
+
+**Request Body:** None
+
+**Authentication:** Optional (logout always succeeds)
+
+**Response Codes:**
+
+| Code | Status | Description |
+|------|--------|-------------|
+| `200` | OK | Logout successful (always) |
+
+**Response Body:**
+
+```json
+{
+  "success": true,
+  "message": "Logged out successfully"
+}
+```
+
+**Response Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `success` | boolean | Always true |
+| `message` | string | Success message |
+
+**Behavior:**
+- Deletes session from database (if exists)
+- Clears `session_token` cookie
+- Always returns 200 (idempotent operation)
+- Works even if not authenticated or session expired
+
+**Example Request:**
+
+```bash
+curl -X POST http://localhost:8000/auth/logout \
+  -b cookies.txt \
+  -c cookies.txt
+```
+
+**Notes:**
+- Logout is idempotent (can call multiple times safely)
+- Does not invalidate other sessions (if user logged in from multiple devices)
+- Cookie is cleared from browser regardless of database result
+
+---
+
+### 5. GET /auth/me
+
+Get current user information.
+
+**Purpose:** Retrieve authenticated user's profile
+
+**Method:** `GET`
+
+**URL:** `/auth/me`
+
+**Authentication:** **Required** (session cookie)
+
+**Request Headers:** None
+
+**Response Codes:**
+
+| Code | Status | Description |
+|------|--------|-------------|
+| `200` | OK | User information returned |
+| `401` | Unauthorized | Not authenticated or session expired |
+
+**Response Body (Success):**
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "username": "testuser",
+  "email": "test@example.com",
+  "created_at": "2025-10-07T12:34:56Z"
+}
+```
+
+**Response Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | User UUID |
+| `username` | string | Username |
+| `email` | string | Email (null if not set) |
+| `created_at` | string | ISO 8601 account creation timestamp |
+
+**Error Response (401 - Not Authenticated):**
+
+```json
+{
+  "detail": "Not authenticated. Please log in."
+}
+```
+
+**Error Response (401 - Expired Session):**
+
+```json
+{
+  "detail": "Invalid or expired session. Please log in again."
+}
+```
+
+**Example Request:**
+
+```bash
+curl -X GET http://localhost:8000/auth/me \
+  -b cookies.txt
+```
+
+**Use Cases:**
+- Check if user is logged in
+- Display user profile in UI
+- Verify session validity
+- Get user ID for API requests
+
+**Notes:**
+- Session is verified and expired sessions are deleted automatically
+- No sensitive fields returned (password_hash, api_token excluded)
+
+---
+
+### 6. GET /auth/status
+
+Check authentication status (optional auth).
+
+**Purpose:** Determine if user is authenticated without requiring login
+
+**Method:** `GET`
+
+**URL:** `/auth/status`
+
+**Authentication:** Optional (works for both authenticated and unauthenticated)
+
+**Request Headers:** None
+
+**Response Codes:**
+
+| Code | Status | Description |
+|------|--------|-------------|
+| `200` | OK | Always returns 200 |
+
+**Response Body (Authenticated):**
+
+```json
+{
+  "authenticated": true,
+  "username": "testuser"
+}
+```
+
+**Response Body (Not Authenticated):**
+
+```json
+{
+  "authenticated": false,
+  "username": null
+}
+```
+
+**Response Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `authenticated` | boolean | Whether user has valid session |
+| `username` | string | Username if authenticated, null otherwise |
+
+**Example Request:**
+
+```bash
+curl -X GET http://localhost:8000/auth/status \
+  -b cookies.txt
+```
+
+**Use Cases:**
+- Frontend auth check without triggering 401 errors
+- Conditional UI rendering (show login vs. dashboard)
+- Public pages that adapt to logged-in users
+- Health check for authentication system
+
+**Notes:**
+- Never returns error (always 200)
+- Safe to call repeatedly (lightweight check)
+- Useful for frontend state management
 
 ---
 
