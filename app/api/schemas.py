@@ -184,11 +184,29 @@ class ImageData(BaseModel):
 # MAIN RESPONSE SCHEMAS
 # ============================================================================
 
+class MemeText(BaseModel):
+    """
+    Meme text overlay for image (top and bottom).
+    """
+    top: str = Field(..., description="Top meme text (uppercase)")
+    bottom: str = Field(..., description="Bottom meme text (uppercase)")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "top": "PYTHON CODE",
+                "bottom": "SUCH QUALITY"
+            }
+        }
+    )
+
+
 class GenerateResponse(BaseModel):
     """
     Complete response for POST /generate endpoint.
 
-    Contains all analysis results, cat attributes, and generated image.
+    Contains all analysis results, cat attributes, generated image,
+    funny story, and meme text overlay.
     Matches the exact structure defined in PRD.md section 3.1.
     """
     success: bool = Field(..., description="Whether generation was successful")
@@ -196,6 +214,8 @@ class GenerateResponse(BaseModel):
     repository: RepositoryInfo = Field(..., description="Repository metadata")
     analysis: AnalysisResult = Field(..., description="Code quality analysis")
     cat_attributes: CatAttributes = Field(..., description="Derived cat attributes")
+    story: Optional[str] = Field(None, description="Funny story about the repository (3-5 sentences)")
+    meme_text: Optional[MemeText] = Field(None, description="Meme text overlay for image")
     image: ImageData = Field(..., description="Generated image data")
     timestamp: datetime = Field(..., description="Generation timestamp (ISO 8601)")
 
@@ -292,5 +312,6 @@ __all__ = [
     "AnalysisResult",
     "CatAttributes",
     "ImageData",
+    "MemeText",
     "HealthCheckResponse",
 ]

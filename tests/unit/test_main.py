@@ -50,11 +50,16 @@ class TestHealthEndpoint:
 
         # Check required fields
         assert "status" in data
-        assert "database" in data
-        assert "timestamp" in data
+        assert "services" in data
 
         # Check status value
-        assert data["status"] in ["healthy", "unhealthy"]
+        assert data["status"] in ["healthy", "degraded"]
+
+        # Check services structure
+        assert "database" in data["services"]
+        assert "github_api" in data["services"]
+        assert "openrouter" in data["services"]
+        assert "together_ai" in data["services"]
 
     def test_health_endpoint_database_check(self, client):
         """Test that /health endpoint checks database connectivity."""
@@ -62,20 +67,10 @@ class TestHealthEndpoint:
         data = response.json()
 
         # Database should be checked
-        assert "database" in data
-        assert isinstance(data["database"], dict)
-        assert "status" in data["database"]
-
-    def test_health_endpoint_timestamp_format(self, client):
-        """Test that /health endpoint returns valid ISO timestamp."""
-        response = client.get("/health")
-        data = response.json()
-
-        # Timestamp should be valid ISO format
-        timestamp = data["timestamp"]
-        assert isinstance(timestamp, str)
-        # Should be parseable as datetime
-        datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+        assert "services" in data
+        assert "database" in data["services"]
+        assert isinstance(data["services"]["database"], dict)
+        assert "status" in data["services"]["database"]
 
 
 class TestAPIDocs:

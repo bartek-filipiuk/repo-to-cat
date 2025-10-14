@@ -202,6 +202,10 @@ def get_language_background(language: str) -> str:
         >>> get_language_background("UnknownLang")
         'a generic code editor with colorful syntax highlighting and binary matrix'
     """
+    # Handle None or empty language
+    if not language:
+        return DEFAULT_BACKGROUND
+
     # Case-insensitive lookup
     language_normalized = language.strip()
 

@@ -10,6 +10,8 @@ Repo-to-Cat analyzes GitHub repositories and generates AI-powered cat images tha
 
 - 🔍 **Smart Code Analysis**: Analyzes 3-5 strategic files using AI (no full repo cloning needed)
 - 🎨 **Unique Cat Images**: Generated with FLUX.1.1-pro based on code quality
+- 📖 **Funny Stories**: AI-generated 3-5 sentence stories about your repository (friendly roast style)
+- 😹 **Meme Text Overlay**: Classic top/bottom meme text added to cat images
 - 🤖 **AI-Powered**: Uses LangGraph workflow with google/gemini-2.5-flash for analysis
 - 📊 **Detailed Insights**: Returns comprehensive JSON with analysis metrics
 - 🚀 **Fast**: No repo cloning, uses GitHub Contents API directly
@@ -19,7 +21,8 @@ Repo-to-Cat analyzes GitHub repositories and generates AI-powered cat images tha
 - **Backend**: FastAPI + Python 3.11+
 - **AI**: LangChain 0.3.0 + LangGraph 0.2.74
 - **LLM**: OpenRouter (google/gemini-2.5-flash)
-- **Image**: Together.ai (FLUX.1.1-pro, 768x432)
+- **Image Generation**: Together.ai (FLUX.1.1-pro, 768x432)
+- **Image Processing**: Pillow (text overlay, meme generation)
 - **GitHub**: PyGithub + GitHub Contents API
 - **Database**: PostgreSQL + SQLAlchemy + Alembic
 - **Testing**: pytest + pytest-asyncio (80% coverage target)
@@ -172,6 +175,27 @@ pytest tests/unit/test_config.py -v
 - **Background**: Language-specific (Python=snakes, JS=coffee, Go=gophers)
 - **Expression**: Test coverage (grumpy → happy)
 
+## Documentation
+
+### Guides
+
+- **[API Endpoints](docs/api-endpoints.md)** - Complete API reference with examples
+- **[Workflow Guide](docs/workflow-guide.md)** - How the system works (11-node pipeline)
+- **[Response Examples](docs/response-examples.md)** - JSON response reference with real examples
+- **[Docker Setup](docs/docker-setup.md)** - Docker and PostgreSQL configuration
+- **[Database Guide](docs/database-guide.md)** - Schema, migrations, and queries
+- **[Testing Guide](docs/testing-guide.md)** - Running tests and coverage
+- **[FastAPI Guide](docs/fastapi-guide.md)** - Server configuration and usage
+- **[Health Check](docs/health-check.md)** - Service monitoring
+
+### Stage Documentation
+
+- **[Stage 1.2 Summary](docs/stages/stage-1.2-summary.md)** - Database infrastructure
+- **[Stage 1.3 Summary](docs/stages/stage-1.3-summary.md)** - FastAPI skeleton
+- **[Stage 8 Summary](docs/stages/stage-8-summary.md)** - API endpoints + story/meme features
+
+---
+
 ## Contributing
 
 This project follows strict TDD and incremental development principles:
@@ -200,5 +224,5 @@ Built with:
 ---
 
 **Status**: 🚧 Early Development
-**Version**: 0.1.0 (MVP)
-**Last Updated**: 2025-10-07
+**Version**: 0.2.0 (Stage 8 Complete - API + Stories + Memes)
+**Last Updated**: 2025-10-13

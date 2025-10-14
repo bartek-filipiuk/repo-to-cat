@@ -2,16 +2,23 @@
 FastAPI application entry point for Repo-to-Cat.
 
 This module initializes the FastAPI app with basic configuration,
-middleware, and health check endpoint.
+middleware, API routes, and static file serving.
 """
-from fastapi import FastAPI, Depends
+import os
+from pathlib import Path
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import text
-from sqlalchemy.orm import Session
-from datetime import datetime, timezone
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
-from app.core.database import get_db
+from app.api.routes import router
+
+# Load environment variables from settings into os.environ
+# This ensures that os.getenv() calls work correctly
+os.environ["GITHUB_TOKEN"] = settings.GITHUB_TOKEN
+os.environ["OPENROUTER_API_KEY"] = settings.OPENROUTER_API_KEY
+os.environ["TOGETHER_API_KEY"] = settings.TOGETHER_API_KEY
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -36,41 +43,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Create generated_images directory if it doesn't exist
+image_storage_path = Path(settings.IMAGE_STORAGE_PATH)
+image_storage_path.mkdir(parents=True, exist_ok=True)
 
-@app.get("/health")
-async def health_check(db: Session = Depends(get_db)):
-    """
-    Health check endpoint.
+# Mount static files for serving generated images
+app.mount(
+    "/generated_images",
+    StaticFiles(directory=str(image_storage_path)),
+    name="generated_images"
+)
 
-    Checks the status of the application and database connectivity.
-    Returns health status, database status, and timestamp.
-
-    Args:
-        db: Database session dependency
-
-    Returns:
-        dict: Health status information including:
-            - status: Overall health status ("healthy" or "unhealthy")
-            - database: Database connectivity status
-            - timestamp: Current ISO timestamp
-    """
-    # Check database connectivity
-    database_status = {"status": "down"}
-    try:
-        # Try to execute a simple query
-        db.execute(text("SELECT 1"))
-        database_status = {"status": "up"}
-    except Exception as e:
-        database_status = {"status": "down", "error": str(e)}
-
-    # Determine overall health status
-    overall_status = "healthy" if database_status["status"] == "up" else "unhealthy"
-
-    return {
-        "status": overall_status,
-        "database": database_status,
-        "timestamp": datetime.now(timezone.utc).isoformat()
-    }
+# Include API routes
+app.include_router(router)
 
 
 @app.get("/")
@@ -88,5 +73,6 @@ async def root():
         "description": "GitHub Repository Quality Visualizer",
         "version": app.version,
         "docs": "/docs",
-        "health": "/health"
+        "health": "/health",
+        "generate": "/generate"
     }

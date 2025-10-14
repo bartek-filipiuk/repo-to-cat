@@ -201,3 +201,43 @@ Provide a comprehensive code quality analysis."""
             raise ValueError(f"Failed to parse JSON response: {e}")
         except Exception as e:
             raise ValueError(f"Failed to validate response structure: {e}")
+
+    def generate_text(
+        self,
+        prompt: str,
+        system_message: Optional[str] = None,
+        model: str = DEFAULT_MODEL,
+        temperature: float = 0.7,
+        max_tokens: int = 500
+    ) -> str:
+        """
+        Generate text using OpenRouter.
+
+        Args:
+            prompt: The prompt to generate text from
+            system_message: Optional system message to set context
+            model: Model to use (default: google/gemini-2.5-flash)
+            temperature: Sampling temperature (0.0-1.0)
+            max_tokens: Maximum tokens to generate
+
+        Returns:
+            Generated text string
+
+        Raises:
+            APIError: If API call fails after retries
+        """
+        def make_request():
+            messages = []
+            if system_message:
+                messages.append({"role": "system", "content": system_message})
+            messages.append({"role": "user", "content": prompt})
+
+            return self.client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens
+            )
+
+        response = self._exponential_backoff_retry(make_request)
+        return response.choices[0].message.content.strip()

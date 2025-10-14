@@ -7,9 +7,12 @@ Defines the StateGraph workflow that orchestrates the entire pipeline:
 3. Fetch file contents
 4. Analyze code quality with LLM
 5. Map analysis results to cat attributes
-6. Generate image prompt
-7. Generate cat image
-8. Save results to database
+6. Generate funny story about repository
+7. Generate meme text for image overlay
+8. Generate image prompt
+9. Generate cat image
+10. Add text overlay to image
+11. Save results to database
 """
 
 import logging
@@ -22,8 +25,11 @@ from app.langgraph.nodes import (
     fetch_files_node,
     analyze_code_node,
     map_attributes_node,
+    generate_story_node,
+    generate_meme_text_node,
     generate_prompt_node,
     generate_image_node,
+    add_text_overlay_node,
     save_to_db_node
 )
 
@@ -40,9 +46,12 @@ def create_workflow() -> StateGraph:
     3. fetch_files: Download file contents
     4. analyze_code: Perform code quality analysis
     5. map_attributes: Map analysis to cat attributes
-    6. generate_prompt: Create image generation prompt
-    7. generate_image: Generate cat image with FLUX
-    8. save_to_db: Save results to PostgreSQL
+    6. generate_story: Generate funny story about repository
+    7. generate_meme_text: Generate meme text for image overlay
+    8. generate_prompt: Create image generation prompt
+    9. generate_image: Generate cat image with FLUX
+    10. add_text_overlay: Add meme text overlay to image
+    11. save_to_db: Save results to PostgreSQL
 
     Returns:
         Compiled LangGraph workflow ready for invocation
@@ -67,19 +76,25 @@ def create_workflow() -> StateGraph:
     builder.add_node("fetch_files", fetch_files_node)
     builder.add_node("analyze_code", analyze_code_node)
     builder.add_node("map_attributes", map_attributes_node)
+    builder.add_node("generate_story", generate_story_node)
+    builder.add_node("generate_meme_text", generate_meme_text_node)
     builder.add_node("generate_prompt", generate_prompt_node)
     builder.add_node("generate_image", generate_image_node)
+    builder.add_node("add_text_overlay", add_text_overlay_node)
     builder.add_node("save_to_db", save_to_db_node)
 
-    # Define edges (sequential flow for MVP)
+    # Define edges (sequential flow)
     builder.add_edge(START, "extract_metadata")
     builder.add_edge("extract_metadata", "select_files")
     builder.add_edge("select_files", "fetch_files")
     builder.add_edge("fetch_files", "analyze_code")
     builder.add_edge("analyze_code", "map_attributes")
-    builder.add_edge("map_attributes", "generate_prompt")
+    builder.add_edge("map_attributes", "generate_story")
+    builder.add_edge("generate_story", "generate_meme_text")
+    builder.add_edge("generate_meme_text", "generate_prompt")
     builder.add_edge("generate_prompt", "generate_image")
-    builder.add_edge("generate_image", "save_to_db")
+    builder.add_edge("generate_image", "add_text_overlay")
+    builder.add_edge("add_text_overlay", "save_to_db")
     builder.add_edge("save_to_db", END)
 
     # Compile the workflow
