@@ -12,6 +12,7 @@ interface Props {
 }
 
 const { generation } = Astro.props;
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000';
 
 // Extract repo info from github_url if not available
 const repoName = generation.repo_name || generation.github_url.split('/').pop() || 'Unknown';
@@ -45,7 +46,7 @@ const scoreBadgeClass = getScoreBadgeClass(generation.code_quality_score);
   <div class="aspect-square mb-4 rounded overflow-hidden bg-oxide-darker flex items-center justify-center">
     {generation.image_path ? (
       <img
-        src={`http://localhost:8000${generation.image_path}`}
+        src={`${API_URL}${generation.image_path}`}
         alt={`Cat for ${repoName}`}
         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
       />

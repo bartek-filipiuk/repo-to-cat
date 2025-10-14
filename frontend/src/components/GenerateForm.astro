@@ -41,6 +41,8 @@
 </div>
 
 <script>
+  const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000';
+
   const form = document.getElementById('generateForm') as HTMLFormElement;
   const statusMessage = document.getElementById('statusMessage') as HTMLDivElement;
   const loadingSpinner = document.getElementById('loadingSpinner') as HTMLDivElement;
@@ -68,7 +70,7 @@
 
     try {
       // Submit generation request
-      const response = await fetch('http://localhost:8000/generate', {
+      const response = await fetch(`${API_URL}/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +102,7 @@
       pollingStatus.textContent = `Checking status... (${pollCount * 2}s)`;
 
       try {
-        const response = await fetch(`http://localhost:8000/generation/${generationId}`);
+        const response = await fetch(`${API_URL}/generation/${generationId}`);
 
         if (!response.ok) {
           throw new Error('Failed to check status');

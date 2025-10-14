@@ -42,6 +42,8 @@ const { user } = Astro.props;
 </header>
 
 <script>
+  const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000';
+
   // Handle logout form submission via fetch
   document.addEventListener('DOMContentLoaded', () => {
     const logoutForm = document.querySelector('form[action="/api/logout"]');
@@ -51,7 +53,7 @@ const { user } = Astro.props;
         e.preventDefault();
 
         try {
-          const response = await fetch('http://localhost:8000/auth/logout', {
+          const response = await fetch(`${API_URL}/auth/logout`, {
             method: 'POST',
             credentials: 'include',
           });
