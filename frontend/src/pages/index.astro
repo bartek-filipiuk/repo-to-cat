@@ -14,13 +14,28 @@ import { api } from '../lib/api';
 // Require authentication
 const user = await requireAuth(Astro);
 
-// Fetch user's generations
+// Fetch user's generations with proper cookie forwarding for SSR
 let generations = [];
 let error: string | null = null;
 
 try {
-  const response = await api.getGenerations(50, 0);
-  generations = response.generations;
+  // Get session cookie from request headers
+  const cookies = Astro.request.headers.get('cookie');
+  const apiUrl = import.meta.env.API_URL || 'http://localhost:8000';
+
+  const response = await fetch(`${apiUrl}/generations?limit=50&offset=0`, {
+    headers: {
+      'Cookie': cookies || '',
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch generations');
+  }
+
+  const data = await response.json();
+  generations = data.generations || [];
 } catch (err: any) {
   console.error('Failed to fetch generations:', err);
   error = 'Failed to load your generations. Please refresh the page.';

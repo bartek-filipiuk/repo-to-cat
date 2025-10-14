@@ -6,7 +6,6 @@
  */
 
 import { getSession, setSessionCookie } from '../lib/auth';
-import { api } from '../lib/api';
 
 // Check if already logged in
 const user = await getSession(Astro);
@@ -20,23 +19,52 @@ let error: string | null = null;
 if (Astro.request.method === 'POST') {
   try {
     const formData = await Astro.request.formData();
-    const username = formData.get('username')?.toString() || '';
-    const password = formData.get('password')?.toString() || '';
+    const usernameValue = formData.get('username');
+    const passwordValue = formData.get('password');
 
-    if (!username || !password) {
+    if (!usernameValue || !passwordValue) {
       error = 'Username and password are required';
     } else {
-      // Call backend login API
-      const response = await api.login(username, password);
+      // Call backend login API directly (not using api client for SSR)
+      const apiUrl = import.meta.env.API_URL || 'http://localhost:8000';
+      const loginResponse = await fetch(`${apiUrl}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: usernameValue,
+          password: passwordValue
+        }),
+      });
 
-      // Set session cookie
-      setSessionCookie(Astro, response.token);
+      if (!loginResponse.ok) {
+        try {
+          const errorData = await loginResponse.json();
+          error = (errorData && errorData.detail) ? String(errorData.detail) : 'Invalid username or password';
+        } catch {
+          error = 'Invalid username or password';
+        }
+      } else {
+        // Extract session cookie from backend response and forward to client
+        const setCookieHeader = loginResponse.headers.get('set-cookie');
+        if (setCookieHeader) {
+          // Parse the cookie and set it in Astro response
+          const cookieParts = setCookieHeader.split(';')[0]; // Get "session_token=value"
+          const [name, value] = cookieParts.split('=');
 
-      // Redirect to dashboard
-      return Astro.redirect('/');
+          if (name && value) {
+            setSessionCookie(Astro, value);
+          }
+        }
+
+        // Redirect to dashboard
+        return Astro.redirect('/');
+      }
     }
   } catch (err: any) {
-    error = err.message || 'Invalid username or password';
+    console.error('Login error:', err);
+    error = (err && err.message) ? String(err.message) : 'An error occurred during login';
   }
 }
 ---
