@@ -19,6 +19,7 @@ class WorkflowState(TypedDict):
     Required fields (must be provided at workflow invocation):
         github_url: GitHub repository URL to analyze
         generation_id: Unique UUID for this generation
+        user_id: UUID of the authenticated user
 
     Optional fields (populated during workflow execution):
         metadata: Repository metadata (name, owner, size, stars, language)
@@ -35,6 +36,7 @@ class WorkflowState(TypedDict):
     # Required input fields
     github_url: str
     generation_id: str
+    user_id: str
 
     # Optional intermediate state fields
     metadata: NotRequired[Dict[str, Any]]
