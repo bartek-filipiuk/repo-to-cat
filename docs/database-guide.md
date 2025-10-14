@@ -46,14 +46,53 @@ postgresql://repo_user:repo_password@localhost:5434/repo_to_cat
 ```sql
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    username VARCHAR(255) UNIQUE,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
     api_token VARCHAR(255) UNIQUE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 ```
 
-**Purpose:** User authentication and tracking (post-MVP feature)
+**Purpose:** User authentication and tracking
+
+**Key fields:**
+- `username` - Required, unique username for login
+- `password_hash` - Bcrypt hashed password (never store plain text)
+- `email` - Optional, unique email address
+- `api_token` - Optional, for future API key authentication
+
+**Relationships:**
+- Has many `sessions` (cascade delete)
+- Has many `generations`
+
+### `sessions` Table
+
+```sql
+CREATE TABLE sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token VARCHAR(255) UNIQUE NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX ix_sessions_token ON sessions(token);
+CREATE INDEX ix_sessions_user_id ON sessions(user_id);
+```
+
+**Purpose:** Store authentication session tokens
+
+**Key fields:**
+- `user_id` - Foreign key to users table
+- `token` - Secure random token (64 characters hex)
+- `expires_at` - Session expiration (typically 7 days from creation)
+- Indexes on `token` and `user_id` for fast lookups
+
+**Relationships:**
+- Belongs to `user` (foreign key)
+- Cascade delete: deleting user automatically deletes all their sessions
 
 ### `generations` Table
 
@@ -70,8 +109,16 @@ CREATE TABLE generations (
     analysis_data JSONB,
     image_path TEXT,
     image_prompt TEXT,
+    story TEXT,
+    meme_text_top VARCHAR(100),
+    meme_text_bottom VARCHAR(100),
+    user_id UUID REFERENCES users(id),
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+CREATE INDEX ix_generations_github_url ON generations(github_url);
+CREATE INDEX ix_generations_created_at ON generations(created_at);
+CREATE INDEX ix_generations_user_id ON generations(user_id);
 ```
 
 **Purpose:** Store repository analysis results and generated cat images
@@ -80,6 +127,12 @@ CREATE TABLE generations (
 - `cat_attributes` - JSONB: `{"size": "chonky", "color": "orange", ...}`
 - `analysis_data` - JSONB: Full analysis metrics from LLM
 - `code_quality_score` - Decimal (0.0-10.0)
+- `story` - Funny 3-5 sentence story about the repository
+- `meme_text_top`, `meme_text_bottom` - Meme text overlay
+- `user_id` - Optional foreign key to user who created generation
+
+**Relationships:**
+- Belongs to `user` (optional, nullable)
 
 ---
 
@@ -103,6 +156,7 @@ docker compose exec postgres psql -U repo_user -d repo_to_cat
 
 -- Describe table schema
 \d users
+\d sessions
 \d generations
 
 -- List all databases
@@ -137,6 +191,34 @@ SELECT
     cat_attributes->>'color' as cat_color
 FROM generations
 WHERE cat_attributes IS NOT NULL;
+
+-- View user sessions
+SELECT
+    u.username,
+    s.token,
+    s.created_at,
+    s.expires_at
+FROM sessions s
+JOIN users u ON s.user_id = u.id
+ORDER BY s.created_at DESC;
+
+-- View generations by user
+SELECT
+    u.username,
+    COUNT(g.id) as generation_count
+FROM users u
+LEFT JOIN generations g ON g.user_id = u.id
+GROUP BY u.id, u.username
+ORDER BY generation_count DESC;
+
+-- Check active sessions
+SELECT
+    u.username,
+    COUNT(s.id) as active_sessions
+FROM users u
+JOIN sessions s ON s.user_id = u.id
+WHERE s.expires_at > NOW()
+GROUP BY u.id, u.username;
 
 -- Check database size
 SELECT pg_size_pretty(pg_database_size('repo_to_cat'));

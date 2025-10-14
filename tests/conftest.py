@@ -3,6 +3,9 @@ Pytest configuration and shared fixtures.
 
 IMPORTANT: This file sets environment variables at module import time,
 BEFORE any other imports, to prevent ValidationError from Settings().
+
+CRITICAL: Tests use an isolated test database (repo_to_cat_test) to prevent
+corrupting production data. Never use the production database for tests!
 """
 import os
 
@@ -24,8 +27,9 @@ if "OPENROUTER_API_KEY" not in os.environ:
 if "TOGETHER_API_KEY" not in os.environ:
     os.environ["TOGETHER_API_KEY"] = "test_together_key_789"
 
+# FIXED: Use separate test database to prevent corrupting production data
 if "DATABASE_URL" not in os.environ:
-    os.environ["DATABASE_URL"] = "postgresql://test:test@localhost:5434/test_db"
+    os.environ["DATABASE_URL"] = "postgresql://repo_user:repo_password@localhost:5434/repo_to_cat_test"
 
 
 # ============================================================================
