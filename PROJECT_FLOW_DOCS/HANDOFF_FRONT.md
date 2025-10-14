@@ -2,9 +2,13 @@
 
 **Project:** Repo-to-Cat Frontend
 **Last Updated:** 2025-10-14
-**Status:** 🚧 Stage F1 Complete, F2 In Progress
+**Status:** ✅ Backend Complete (F1-F3), Ready for Frontend (F4-F10)
 **Branch:** `feature/frontend-auth-backend`
-**Commit:** `7d8648b` (Stage F1)
+**Commits:**
+- `7d8648b` - Stage F1: Database Schema
+- `dabbead` - Stage F2: Auth Endpoints
+- `33a034f` - Stage F3: Protected Routes
+- `7ad039f` - Critical Bugfixes (Migration + Test Isolation)
 
 ---
 
@@ -25,24 +29,39 @@ Build an Astro SSR frontend with username/password authentication for the Repo-t
 - [x] F1.2: Create sessions table for auth tokens
 - [x] F1.3: Add user_id foreign key to generations table
 - [x] F1.4: Update documentation (database-guide.md)
+- [x] F1.5: Write unit tests for database models
+- [x] F1.6: Create and apply Alembic migration
 - **Commit:** `7d8648b` - Stage F1: Database schema for authentication
+- **Tests:** 13/13 passing ✅
 
-### Stage F2: Backend Authentication Endpoints
-- [ ] F2.1: Create password utility functions (bcrypt)
-- [ ] F2.2: Create auth dependencies (session validation)
-- [ ] F2.3: Implement POST /auth/login endpoint
-- [ ] F2.4: Implement POST /auth/logout endpoint
-- [ ] F2.5: Implement GET /auth/me endpoint
-- [ ] F2.6: Write integration tests for auth endpoints
-- [ ] F2.7: Update documentation (api-endpoints.md)
+### Stage F2: Backend Authentication Endpoints ✅
+- [x] F2.1: Create password utility functions (bcrypt)
+- [x] F2.2: Create auth dependencies (session validation)
+- [x] F2.3: Implement POST /auth/login endpoint
+- [x] F2.4: Implement POST /auth/logout endpoint
+- [x] F2.5: Implement GET /auth/me endpoint
+- [x] F2.6: Implement GET /auth/status endpoint
+- [x] F2.7: Write integration tests for auth endpoints
+- [x] F2.8: Update documentation (api-endpoints.md)
+- **Commit:** `dabbead` - Stage F2: Backend authentication endpoints
+- **Tests:** 17 auth utils + 17 auth endpoints = 34/34 passing ✅
 
-### Stage F3: Backend Protected Routes
-- [ ] F3.1: Protect POST /generate endpoint (require auth)
-- [ ] F3.2: Update workflow to save user_id with generation
-- [ ] F3.3: Create GET /generations endpoint (list user's generations)
-- [ ] F3.4: Create GET /generation/:id endpoint (public, with status)
-- [ ] F3.5: Write tests for protected routes
-- [ ] F3.6: Update documentation (api-endpoints.md)
+### Stage F3: Backend Protected Routes ✅
+- [x] F3.1: Protect POST /generate endpoint (require auth)
+- [x] F3.2: Update workflow to save user_id with generation
+- [x] F3.3: Create GET /generations endpoint (list user's generations)
+- [x] F3.4: Create GET /generation/:id endpoint (public, with status)
+- [x] F3.5: Write tests for protected routes
+- [x] F3.6: Update documentation (api-endpoints.md)
+- **Commit:** `33a034f` - Stage F3: Backend protected routes
+- **Tests:** 12 protected route tests = 46/46 total passing ✅
+
+### Critical Bugfixes ✅
+- [x] Fix migration: Add password_hash as nullable first with backfill
+- [x] Fix test isolation: Use separate test database (repo_to_cat_test)
+- [x] Create scripts/setup_test_db.sh for test database initialization
+- **Commit:** `7ad039f` - CRITICAL BUGFIXES: Migration safety and test isolation
+- **Issues Resolved:** Migration with existing data, test database corruption risk
 
 ### Stage F4: Astro Project Setup
 - [ ] F4.1: Initialize Astro project in frontend/ directory
@@ -2887,18 +2906,22 @@ print(f"User created: {user.username}")
 
 ## Changelog
 
-### 2025-10-14 - Stage F1 Complete ✅
+### 2025-10-14 - Backend Complete (F1-F3) ✅
 
-**Commit:** `7d8648b` - Stage F1: Database schema for authentication
+**All backend stages completed! Ready for frontend implementation (F4-F10).**
+
+---
+
+#### Stage F1: Database Schema ✅
+**Commit:** `7d8648b`
 
 **Completed Tasks:**
-- ✅ F1.1: Updated User model with password_hash and email fields
-- ✅ F1.2: Created Session model for authentication tokens
-- ✅ F1.3: Added user_id foreign key to Generation model
-- ✅ F1.4: Created Alembic migration (1052d2e36053)
-- ✅ F1.5: Wrote comprehensive unit tests (13/13 passing)
-- ✅ F1.6: Updated docs/database-guide.md with auth schema
-- ✅ F1.7: Committed all changes with clean message
+- ✅ Updated User model with password_hash and email fields
+- ✅ Created Session model for authentication tokens
+- ✅ Added user_id foreign key to Generation model
+- ✅ Created Alembic migration (1052d2e36053)
+- ✅ Wrote comprehensive unit tests (13/13 passing)
+- ✅ Updated docs/database-guide.md with auth schema
 
 **Database Changes:**
 - `users` table: Added password_hash (NOT NULL), email (UNIQUE)
@@ -2908,19 +2931,93 @@ print(f"User created: {user.username}")
 - Indexes created for performance
 
 **Tests:** 13/13 passing ✅
-- All database models tested
-- Relationships verified
-- Cascade delete confirmed
 
-**Documentation:**
-- Updated database-guide.md with complete auth schema
-- Created HANDOFF_FRONT.md (4000+ lines implementation guide)
-- Created INIT_FRONT_PROMPT.md (context restoration guide)
+---
 
-**Next:** Stage F2 - Backend Authentication Endpoints
+#### Stage F2: Backend Authentication Endpoints ✅
+**Commit:** `dabbead`
+
+**Completed Tasks:**
+- ✅ Created app/utils/auth.py with bcrypt password hashing
+- ✅ Created app/api/dependencies.py with authentication dependencies
+- ✅ Created app/api/auth.py with 4 auth endpoints
+- ✅ Added authentication schemas to app/api/schemas.py
+- ✅ Updated app/main.py to register auth router
+- ✅ Added bcrypt==4.1.2 to requirements.txt
+- ✅ Wrote 17 unit tests for auth utilities
+- ✅ Wrote 17 integration tests for auth endpoints
+- ✅ Updated docs/api-endpoints.md with auth documentation
+
+**Features Implemented:**
+- POST /auth/login: Username/password authentication with httpOnly cookie
+- POST /auth/logout: Session deletion (idempotent)
+- GET /auth/me: Get current user info (protected)
+- GET /auth/status: Check auth status (public)
+
+**Security:**
+- Bcrypt password hashing with salt
+- 64-character hex session tokens
+- httpOnly, sameSite=lax cookies (CSRF/XSS protection)
+- 7-day session expiration
+- Automatic expired session cleanup
+
+**Tests:** 17 auth utils + 17 auth endpoints = 34/34 passing ✅
+
+---
+
+#### Stage F3: Backend Protected Routes ✅
+**Commit:** `33a034f`
+
+**Completed Tasks:**
+- ✅ Protected POST /generate endpoint (requires authentication)
+- ✅ Added GET /generations endpoint (list user's generations, paginated)
+- ✅ Added GET /generation/:id endpoint (public, shareable)
+- ✅ Updated app/api/routes.py with authentication dependencies
+- ✅ Modified workflow invoke to pass user_id for generation tracking
+- ✅ Wrote 12 integration tests for protected routes
+- ✅ Updated docs/api-endpoints.md with protected routes documentation
+
+**Features Implemented:**
+- POST /generate: Now requires session cookie, links generation to user
+- GET /generations: Paginated list (limit, offset), ordered by created_at desc
+- GET /generation/:id: Public endpoint for sharing generations (no auth)
+
+**Security:**
+- Protected routes return 401 if not authenticated
+- Expired sessions automatically rejected
+- Users can only see their own generations in list view
+- Public detail view allows sharing without authentication
+
+**Tests:** 12 protected route tests, 46/46 total passing ✅
+
+---
+
+#### Critical Bugfixes ✅
+**Commit:** `7ad039f`
+
+**Issues Fixed:**
+
+**Bug 1: Migration NOT NULL Constraint**
+- ISSUE: Migration added password_hash as NOT NULL without backfilling existing rows
+- IMPACT: Would cause migration failure on databases with existing users
+- FIX: Add column as nullable first, backfill with 'NEEDS_PASSWORD_RESET', then alter to NOT NULL
+- TESTED: Verified with 2 existing users, migration succeeds
+
+**Bug 2: Test Database Isolation**
+- ISSUE: Tests configured to use production database (repo_to_cat)
+- IMPACT: Tests could corrupt production data, non-repeatable tests
+- FIX: Changed to separate test database (repo_to_cat_test)
+- ADDED: scripts/setup_test_db.sh for test database initialization
+- TESTED: All 46 tests pass in isolated environment
+
+**Files Changed:**
+- alembic/versions/1052d2e36053_*.py - Fixed migration with backfill strategy
+- tests/conftest.py - Changed to use test database
+- scripts/setup_test_db.sh - New helper script (executable)
 
 ---
 
 **Last Updated:** 2025-10-14
-**Status:** Stage F1 Complete ✅, Stage F2 Starting
-**Next Task:** F2.1 - Create app/utils/auth.py (bcrypt utilities)
+**Status:** Backend Complete (F1-F3) ✅, Ready for Frontend (F4-F10)
+**Total Tests:** 46/46 passing ✅
+**Next Stage:** F4 - Astro Project Setup
