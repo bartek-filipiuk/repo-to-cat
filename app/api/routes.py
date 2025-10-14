@@ -442,35 +442,33 @@ async def get_generation(
             detail=f"Generation not found: {generation_id}"
         )
 
-    # Build response (similar to /generate response)
-    response_data = {
+    # Build response (nest under 'generation' key for frontend compatibility)
+    return {
         "success": True,
-        "generation_id": str(generation.id),
-        "repository": {
-            "url": generation.github_url,
-            "name": generation.repo_name,
-            "owner": generation.repo_owner,
-            "primary_language": generation.primary_language or "Unknown",
-            "size_kb": generation.repo_size_kb,
-            "stars": None  # Not stored in current schema
-        },
-        "analysis": {
-            "code_quality_score": generation.code_quality_score,
-            "files_analyzed": generation.analysis_data.get("files_analyzed", []) if generation.analysis_data else [],
-            "metrics": generation.analysis_data.get("metrics", {}) if generation.analysis_data else {}
-        },
-        "cat_attributes": generation.cat_attributes or {},
-        "story": generation.story,
-        "meme_text": {
-            "top": generation.meme_text_top,
-            "bottom": generation.meme_text_bottom
-        } if generation.meme_text_top or generation.meme_text_bottom else None,
-        "image": {
-            "url": generation.image_path,
-            "binary": None,  # Don't include base64 in detail view (use static file serving)
-            "prompt": generation.image_prompt
-        },
-        "timestamp": generation.created_at.isoformat() if generation.created_at else None
+        "status": "completed",  # All generations in DB are completed
+        "generation": {
+            "id": str(generation.id),
+            "github_url": generation.github_url,
+            "repository": {
+                "owner": generation.repo_owner,
+                "name": generation.repo_name,
+                "primary_language": generation.primary_language or "Unknown",
+                "size_kb": generation.repo_size_kb,
+            },
+            "analysis": {
+                "code_quality_score": generation.code_quality_score,
+                "data": generation.analysis_data or {}
+            },
+            "cat_attributes": generation.cat_attributes or {},
+            "story": generation.story,
+            "meme_text": {
+                "top": generation.meme_text_top,
+                "bottom": generation.meme_text_bottom
+            } if generation.meme_text_top or generation.meme_text_bottom else None,
+            "image": {
+                "path": generation.image_path,
+                "prompt": generation.image_prompt
+            },
+            "created_at": generation.created_at.isoformat() if generation.created_at else None
+        }
     }
-
-    return response_data
