@@ -1,0 +1,112 @@
+---
+/**
+ * Login Page
+ *
+ * Public page for username/password authentication.
+ */
+
+import { getSession, setSessionCookie } from '../lib/auth';
+import { api } from '../lib/api';
+
+// Check if already logged in
+const user = await getSession(Astro);
+if (user) {
+  return Astro.redirect('/');
+}
+
+let error: string | null = null;
+
+// Handle form submission
+if (Astro.request.method === 'POST') {
+  try {
+    const formData = await Astro.request.formData();
+    const username = formData.get('username')?.toString() || '';
+    const password = formData.get('password')?.toString() || '';
+
+    if (!username || !password) {
+      error = 'Username and password are required';
+    } else {
+      // Call backend login API
+      const response = await api.login(username, password);
+
+      // Set session cookie
+      setSessionCookie(Astro, response.token);
+
+      // Redirect to dashboard
+      return Astro.redirect('/');
+    }
+  } catch (err: any) {
+    error = err.message || 'Invalid username or password';
+  }
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Repo-to-Cat</title>
+</head>
+<body class="bg-oxide-dark min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-md">
+    <!-- Logo/Title -->
+    <div class="text-center mb-8">
+      <h1 class="text-4xl font-bold text-oxide-green mb-2">Repo-to-Cat</h1>
+      <p class="text-oxide-text-dim">Visualize code quality as cats</p>
+    </div>
+
+    <!-- Login Form -->
+    <div class="card">
+      <h2 class="text-2xl font-semibold text-oxide-text mb-6">Login</h2>
+
+      {error && (
+        <div class="bg-red-900/20 border border-red-500/50 text-red-400 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
+
+      <form method="POST">
+        <div class="mb-4">
+          <label for="username" class="block text-oxide-text-dim text-sm font-medium mb-2">
+            Username
+          </label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            class="input w-full"
+            required
+            autofocus
+          />
+        </div>
+
+        <div class="mb-6">
+          <label for="password" class="block text-oxide-text-dim text-sm font-medium mb-2">
+            Password
+          </label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            class="input w-full"
+            required
+          />
+        </div>
+
+        <button type="submit" class="btn-primary w-full">
+          Login
+        </button>
+      </form>
+
+      <p class="text-oxide-text-dim text-sm text-center mt-6">
+        No registration - accounts are manually created
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+
+<style>
+  @import '../styles/global.css';
+</style>

@@ -1,16 +1,53 @@
 ---
+/**
+ * Dashboard Page
+ *
+ * Protected page showing generation form and user's past generations.
+ */
 
+import Layout from '../components/Layout.astro';
+import GenerateForm from '../components/GenerateForm.astro';
+import GenerationList from '../components/GenerationList.astro';
+import { requireAuth } from '../lib/auth';
+import { api } from '../lib/api';
+
+// Require authentication
+const user = await requireAuth(Astro);
+
+// Fetch user's generations
+let generations = [];
+let error: string | null = null;
+
+try {
+  const response = await api.getGenerations(50, 0);
+  generations = response.generations;
+} catch (err: any) {
+  console.error('Failed to fetch generations:', err);
+  error = 'Failed to load your generations. Please refresh the page.';
+}
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="Dashboard" user={user}>
+  <!-- Welcome Section -->
+  <div class="mb-8">
+    <h1 class="text-4xl font-bold text-oxide-text mb-2">
+      Welcome back, <span class="text-oxide-green">{user.username}</span>
+    </h1>
+    <p class="text-oxide-text-dim">
+      Generate cat images from GitHub repositories and view your past creations.
+    </p>
+  </div>
+
+  <!-- Generate Form -->
+  <GenerateForm />
+
+  <!-- Error Message -->
+  {error && (
+    <div class="bg-red-900/20 border border-red-500/50 text-red-400 px-4 py-3 rounded my-8">
+      {error}
+    </div>
+  )}
+
+  <!-- Generation List -->
+  <GenerationList generations={generations} />
+</Layout>
