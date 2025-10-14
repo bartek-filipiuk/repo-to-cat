@@ -2,8 +2,9 @@
 
 **Project:** Repo-to-Cat Frontend
 **Last Updated:** 2025-10-14
-**Status:** 🚧 In Progress
-**Branch:** `feature/frontend-astro-auth`
+**Status:** 🚧 Stage F1 Complete, F2 In Progress
+**Branch:** `feature/frontend-auth-backend`
+**Commit:** `7d8648b` (Stage F1)
 
 ---
 
@@ -19,11 +20,12 @@ Build an Astro SSR frontend with username/password authentication for the Repo-t
 
 ## Progress Tracker
 
-### Stage F1: Database Schema & Backend Auth Foundation
-- [ ] F1.1: Add password_hash and email to users table
-- [ ] F1.2: Create sessions table for auth tokens
-- [ ] F1.3: Add user_id foreign key to generations table
-- [ ] F1.4: Update documentation (database-guide.md)
+### Stage F1: Database Schema & Backend Auth Foundation ✅
+- [x] F1.1: Add password_hash and email to users table
+- [x] F1.2: Create sessions table for auth tokens
+- [x] F1.3: Add user_id foreign key to generations table
+- [x] F1.4: Update documentation (database-guide.md)
+- **Commit:** `7d8648b` - Stage F1: Database schema for authentication
 
 ### Stage F2: Backend Authentication Endpoints
 - [ ] F2.1: Create password utility functions (bcrypt)
@@ -2883,6 +2885,42 @@ print(f"User created: {user.username}")
 
 ---
 
+## Changelog
+
+### 2025-10-14 - Stage F1 Complete ✅
+
+**Commit:** `7d8648b` - Stage F1: Database schema for authentication
+
+**Completed Tasks:**
+- ✅ F1.1: Updated User model with password_hash and email fields
+- ✅ F1.2: Created Session model for authentication tokens
+- ✅ F1.3: Added user_id foreign key to Generation model
+- ✅ F1.4: Created Alembic migration (1052d2e36053)
+- ✅ F1.5: Wrote comprehensive unit tests (13/13 passing)
+- ✅ F1.6: Updated docs/database-guide.md with auth schema
+- ✅ F1.7: Committed all changes with clean message
+
+**Database Changes:**
+- `users` table: Added password_hash (NOT NULL), email (UNIQUE)
+- `sessions` table: Created with user_id FK, token, expires_at
+- `generations` table: Added user_id FK (nullable)
+- All relationships configured (User ↔ Session, User ↔ Generation)
+- Indexes created for performance
+
+**Tests:** 13/13 passing ✅
+- All database models tested
+- Relationships verified
+- Cascade delete confirmed
+
+**Documentation:**
+- Updated database-guide.md with complete auth schema
+- Created HANDOFF_FRONT.md (4000+ lines implementation guide)
+- Created INIT_FRONT_PROMPT.md (context restoration guide)
+
+**Next:** Stage F2 - Backend Authentication Endpoints
+
+---
+
 **Last Updated:** 2025-10-14
-**Status:** Stage F1 starting
-**Next Task:** F1.1 - Add password_hash to users table
+**Status:** Stage F1 Complete ✅, Stage F2 Starting
+**Next Task:** F2.1 - Create app/utils/auth.py (bcrypt utilities)
