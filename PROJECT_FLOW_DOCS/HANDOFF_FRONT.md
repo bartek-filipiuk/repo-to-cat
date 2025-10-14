@@ -71,30 +71,33 @@ Build an Astro SSR frontend with username/password authentication for the Repo-t
 - [x] F4.5: Set up environment variables (.env, .env.example)
 - [x] F4.6: Create documentation (docs/frontend-guide.md)
 
-### Stage F5: Authentication UI
-- [ ] F5.1: Create auth helper library (lib/auth.ts)
-- [ ] F5.2: Create API client library (lib/api.ts)
-- [ ] F5.3: Create login page (pages/login.astro)
-- [ ] F5.4: Create auth middleware (middleware.ts)
-- [ ] F5.5: Create Layout and Header components
-- [ ] F5.6: Test login/logout flow manually
-- [ ] F5.7: Update documentation (docs/frontend-guide.md)
+### Stage F5: Authentication UI ✅
+- [x] F5.1: Create auth helper library (lib/auth.ts)
+- [x] F5.2: Create API client library (lib/api.ts)
+- [x] F5.3: Create login page (pages/login.astro)
+- [x] F5.4: Create auth middleware (middleware.ts)
+- [x] F5.5: Create Layout and Header components
+- [x] F5.6: Test login/logout flow manually
+- [x] F5.7: Update documentation (docs/frontend-guide.md)
+- **Commit:** `3ea1ae4` - Stages F5-F7: Authentication UI, Dashboard, and Generation Detail
 
-### Stage F6: Dashboard & Generate Form
-- [ ] F6.1: Create GenerateForm component with polling
-- [ ] F6.2: Create GenerationCard component
-- [ ] F6.3: Create GenerationList component (grid layout)
-- [ ] F6.4: Create dashboard page (index.astro)
-- [ ] F6.5: Test generate flow with polling
-- [ ] F6.6: Update documentation (docs/frontend-guide.md)
+### Stage F6: Dashboard & Generate Form ✅
+- [x] F6.1: Create GenerateForm component with polling
+- [x] F6.2: Create GenerationCard component
+- [x] F6.3: Create GenerationList component (grid layout)
+- [x] F6.4: Create dashboard page (index.astro)
+- [x] F6.5: Test generate flow with polling
+- [x] F6.6: Update documentation (docs/frontend-guide.md)
+- **Commit:** `3ea1ae4` - Stages F5-F7: Authentication UI, Dashboard, and Generation Detail
 
-### Stage F7: Generation Detail Page
-- [ ] F7.1: Create generation detail page (generation/[id].astro)
-- [ ] F7.2: Implement full-width image display
-- [ ] F7.3: Implement story section
-- [ ] F7.4: Implement repo data cards section
-- [ ] F7.5: Test public shareable links
-- [ ] F7.6: Update documentation (docs/frontend-guide.md)
+### Stage F7: Generation Detail Page ✅
+- [x] F7.1: Create generation detail page (generation/[id].astro)
+- [x] F7.2: Implement full-width image display
+- [x] F7.3: Implement story section
+- [x] F7.4: Implement repo data cards section
+- [x] F7.5: Test public shareable links
+- [x] F7.6: Update documentation (docs/frontend-guide.md)
+- **Commit:** `3ea1ae4` - Stages F5-F7: Authentication UI, Dashboard, and Generation Detail
 
 ### Stage F8: Design System Implementation
 - [ ] F8.1: Configure Tailwind with Oxide color palette
