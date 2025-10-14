@@ -2,13 +2,17 @@
 
 **Project:** Repo-to-Cat Frontend
 **Last Updated:** 2025-10-14
-**Status:** ✅ Backend Complete (F1-F3), Ready for Frontend (F4-F10)
-**Branch:** `feature/frontend-auth-backend`
+**Status:** ✅ Astro UI Complete (F1-F7), Testing & Polish (F8-F10)
+**Branch:** `feature/frontend-astro-ui`
 **Commits:**
 - `7d8648b` - Stage F1: Database Schema
 - `dabbead` - Stage F2: Auth Endpoints
 - `33a034f` - Stage F3: Protected Routes
 - `7ad039f` - Critical Bugfixes (Migration + Test Isolation)
+- `919c3ba` - Stage F4: Astro Project Setup
+- `3ea1ae4` - Stages F5-F7: Authentication UI, Dashboard, and Generation Detail
+- `42c1721` - Documentation: Update HANDOFF_FRONT.md with F4-F7 completion
+- `ef97848` - Fix login authentication and SSR cookie handling
 
 ---
 
