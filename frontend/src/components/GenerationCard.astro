@@ -39,7 +39,7 @@ const scoreBadgeClass = getScoreBadgeClass(generation.code_quality_score);
 
 <a
   href={`/generation/${generation.id}`}
-  class="card group hover:scale-105 transition-transform duration-200 block"
+  class="card-interactive group block"
 >
   <!-- Image -->
   <div class="aspect-square mb-4 rounded overflow-hidden bg-oxide-darker flex items-center justify-center">
@@ -47,7 +47,7 @@ const scoreBadgeClass = getScoreBadgeClass(generation.code_quality_score);
       <img
         src={`http://localhost:8000${generation.image_path}`}
         alt={`Cat for ${repoName}`}
-        class="w-full h-full object-cover"
+        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
       />
     ) : (
       <div class="text-oxide-text-dim text-center p-4">

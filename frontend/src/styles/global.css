@@ -19,14 +19,42 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-oxide-green text-oxide-dark px-6 py-3 rounded font-semibold hover:bg-oxide-green-dim transition-colors;
+    @apply bg-oxide-green text-oxide-dark px-6 py-3 rounded font-semibold
+           hover:bg-oxide-green-dim hover:scale-105
+           active:scale-95
+           transition-all duration-200 ease-out;
+  }
+
+  .btn-secondary {
+    @apply bg-oxide-gray text-oxide-text px-6 py-3 rounded font-semibold
+           border border-oxide-green
+           hover:bg-oxide-green hover:text-oxide-dark
+           transition-all duration-200 ease-out;
   }
 
   .card {
-    @apply bg-oxide-gray rounded-lg p-6 border border-transparent hover:border-oxide-green transition-colors;
+    @apply bg-oxide-gray rounded-lg p-6 border border-transparent
+           hover:border-oxide-green hover:shadow-lg hover:shadow-oxide-green/10
+           transition-all duration-300 ease-out;
+  }
+
+  .card-interactive {
+    @apply card cursor-pointer hover:scale-[1.02] active:scale-[0.98];
   }
 
   .input {
-    @apply bg-oxide-gray border border-oxide-gray-light rounded px-4 py-2 text-oxide-text focus:border-oxide-green focus:outline-none transition-colors;
+    @apply bg-oxide-gray border border-oxide-gray-light rounded px-4 py-2 text-oxide-text
+           focus:border-oxide-green focus:outline-none focus:ring-2 focus:ring-oxide-green/20
+           transition-all duration-200 ease-out;
+  }
+
+  .link {
+    @apply text-oxide-green hover:text-oxide-green-dim underline decoration-transparent hover:decoration-current
+           transition-all duration-150 ease-out;
+  }
+
+  .link-subtle {
+    @apply text-oxide-text-dim hover:text-oxide-green no-underline
+           transition-colors duration-150 ease-out;
   }
 }
