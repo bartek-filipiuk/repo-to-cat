@@ -188,7 +188,9 @@ curl -X GET http://localhost:8000/health | jq
 
 Analyze a GitHub repository and generate a cat image visualization.
 
-**Purpose:** Process repository code and return comprehensive analysis with AI-generated cat image
+**Authentication:** **Required** (session cookie)
+
+**Purpose:** Process repository code and return comprehensive analysis with AI-generated cat image. The generation is linked to the authenticated user's account.
 
 **Method:** `POST`
 
@@ -197,6 +199,7 @@ Analyze a GitHub repository and generate a cat image visualization.
 **Request Headers:**
 ```
 Content-Type: application/json
+Cookie: session_token=<token>
 ```
 
 **Request Body:**
@@ -222,6 +225,7 @@ Content-Type: application/json
 | Code | Status | Description |
 |------|--------|-------------|
 | `200` | OK | Generation successful |
+| `401` | Unauthorized | Not authenticated or session expired |
 | `403` | Forbidden | Private repository without access |
 | `404` | Not Found | Repository doesn't exist |
 | `422` | Unprocessable Entity | Invalid request body (validation error) |
@@ -324,6 +328,14 @@ Content-Type: application/json
 
 **Total Time:** ~15-25 seconds (varies by repository size and API latency)
 
+**Error Response (401 Unauthorized):**
+
+```json
+{
+  "detail": "Not authenticated. Please log in."
+}
+```
+
 **Error Response (403 Forbidden):**
 
 ```json
@@ -350,10 +362,11 @@ Content-Type: application/json
 
 **Example Requests:**
 
-**Basic Request:**
+**Basic Request (with authentication):**
 ```bash
 curl -X POST http://localhost:8000/generate \
   -H "Content-Type: application/json" \
+  -b cookies.txt \
   -d '{"github_url": "https://github.com/python/cpython"}'
 ```
 
@@ -708,6 +721,251 @@ curl -X GET http://localhost:8000/auth/status \
 - Never returns error (always 200)
 - Safe to call repeatedly (lightweight check)
 - Useful for frontend state management
+
+---
+
+## Generation Management Endpoints
+
+### 7. GET /generations
+
+List user's generations (paginated).
+
+**Authentication:** **Required** (session cookie)
+
+**Purpose:** Retrieve a list of all generations created by the authenticated user
+
+**Method:** `GET`
+
+**URL:** `/generations`
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | integer | 50 | Maximum results per page (max: 100) |
+| `offset` | integer | 0 | Number of results to skip (pagination) |
+
+**Request Headers:**
+```
+Cookie: session_token=<token>
+```
+
+**Response Codes:**
+
+| Code | Status | Description |
+|------|--------|-------------|
+| `200` | OK | List retrieved successfully |
+| `401` | Unauthorized | Not authenticated or session expired |
+
+**Response Body:**
+
+```json
+{
+  "success": true,
+  "count": 2,
+  "total": 15,
+  "limit": 50,
+  "offset": 0,
+  "has_more": true,
+  "generations": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "github_url": "https://github.com/python/cpython",
+      "repo_owner": "python",
+      "repo_name": "cpython",
+      "primary_language": "Python",
+      "code_quality_score": 9.5,
+      "image_path": "/generated_images/550e8400.png",
+      "created_at": "2025-10-14T12:34:56.000Z"
+    },
+    {
+      "id": "660f9511-f39c-52e5-b827-557766551111",
+      "github_url": "https://github.com/facebook/react",
+      "repo_owner": "facebook",
+      "repo_name": "react",
+      "primary_language": "JavaScript",
+      "code_quality_score": 8.5,
+      "image_path": "/generated_images/660f9511.png",
+      "created_at": "2025-10-13T08:15:30.000Z"
+    }
+  ]
+}
+```
+
+**Response Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `success` | boolean | Always true for successful requests |
+| `count` | integer | Number of results in this response |
+| `total` | integer | Total number of user's generations |
+| `limit` | integer | Maximum results per page (from query) |
+| `offset` | integer | Results skipped (from query) |
+| `has_more` | boolean | Whether more results are available |
+| `generations` | array | List of generation summaries |
+| `generations[].id` | string | Generation UUID |
+| `generations[].github_url` | string | Repository URL |
+| `generations[].repo_owner` | string | Repository owner |
+| `generations[].repo_name` | string | Repository name |
+| `generations[].primary_language` | string | Main programming language |
+| `generations[].code_quality_score` | float | Quality score (0.0-10.0) |
+| `generations[].image_path` | string | Path to generated image |
+| `generations[].created_at` | string | ISO 8601 creation timestamp |
+
+**Example Requests:**
+
+**Get first page:**
+```bash
+curl -X GET http://localhost:8000/generations \
+  -b cookies.txt
+```
+
+**Get with pagination:**
+```bash
+curl -X GET "http://localhost:8000/generations?limit=10&offset=20" \
+  -b cookies.txt
+```
+
+**Extract generation IDs:**
+```bash
+curl -X GET http://localhost:8000/generations \
+  -b cookies.txt \
+  | jq -r '.generations[].id'
+```
+
+**Use Cases:**
+- Display user dashboard with generation history
+- Pagination for long lists of generations
+- Building gallery views
+- Analytics on user activity
+
+**Notes:**
+- Results ordered by creation date (most recent first)
+- Only returns authenticated user's generations (privacy)
+- Empty list if user has no generations
+- `has_more` field helps implement infinite scroll or pagination UI
+
+---
+
+### 8. GET /generation/{generation_id}
+
+Get generation details by ID (public).
+
+**Authentication:** Not required (public endpoint for sharing)
+
+**Purpose:** Retrieve complete details about a specific generation, including repository analysis, cat attributes, story, and image data. This endpoint is public to enable sharing generation links.
+
+**Method:** `GET`
+
+**URL:** `/generation/{generation_id}`
+
+**Path Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `generation_id` | string | Yes | UUID of the generation |
+
+**Request Headers:** None required
+
+**Response Codes:**
+
+| Code | Status | Description |
+|------|--------|-------------|
+| `200` | OK | Generation found and returned |
+| `404` | Not Found | Generation not found |
+
+**Response Body:**
+
+```json
+{
+  "success": true,
+  "generation_id": "550e8400-e29b-41d4-a716-446655440000",
+  "repository": {
+    "url": "https://github.com/python/cpython",
+    "name": "cpython",
+    "owner": "python",
+    "primary_language": "Python",
+    "size_kb": 150000,
+    "stars": null
+  },
+  "analysis": {
+    "code_quality_score": 9.5,
+    "files_analyzed": ["README.md", "Python/main.c"],
+    "metrics": {
+      "has_tests": true,
+      "has_type_hints": true,
+      "has_documentation": true
+    }
+  },
+  "cat_attributes": {
+    "size": "huge",
+    "age": "legendary",
+    "beauty_score": 9.5,
+    "expression": "proud",
+    "background": "tech conference stage",
+    "accessories": "multiple gold medals"
+  },
+  "story": "The Python repository is that ancient, wise cat...",
+  "meme_text": {
+    "top": "PYTHON POWER",
+    "bottom": "LEGENDARY CODE"
+  },
+  "image": {
+    "url": "/generated_images/550e8400.png",
+    "binary": null,
+    "prompt": "A magnificent legendary cat..."
+  },
+  "timestamp": "2025-10-14T12:34:56.000Z"
+}
+```
+
+**Response Fields:**
+
+Same structure as POST /generate response, except:
+- `image.binary` is `null` (use static file endpoint for image)
+- `repository.stars` may be `null` (not stored in database)
+
+**Error Response (404):**
+
+```json
+{
+  "detail": "Generation not found: 550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+**Example Requests:**
+
+**Get generation details:**
+```bash
+curl -X GET http://localhost:8000/generation/550e8400-e29b-41d4-a716-446655440000
+```
+
+**Get and extract story:**
+```bash
+curl -X GET http://localhost:8000/generation/550e8400-e29b-41d4-a716-446655440000 \
+  | jq -r '.story'
+```
+
+**Get image URL:**
+```bash
+IMAGE_URL=$(curl -s http://localhost:8000/generation/550e8400-e29b-41d4-a716-446655440000 \
+  | jq -r '.image.url')
+echo "http://localhost:8000${IMAGE_URL}"
+```
+
+**Use Cases:**
+- Shareable generation links (no authentication needed)
+- Embedding in external websites
+- Social media sharing
+- Public portfolio/gallery pages
+- Detail view in frontend application
+
+**Notes:**
+- Public endpoint (no authentication required)
+- Works for both authenticated and anonymous users
+- Returns complete generation data (except base64 image)
+- Use static file endpoint to download actual image file
+- Returns 404 for non-existent or deleted generations
 
 ---
 

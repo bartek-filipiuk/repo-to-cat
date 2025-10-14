@@ -18,6 +18,8 @@ from sqlalchemy import text
 from app.core.config import settings
 from app.core.database import get_db
 from app.api.schemas import GenerateRequest, GenerateResponse
+from app.api.dependencies import get_current_user
+from app.models.database import User, Generation
 from app.langgraph.workflow import create_workflow
 
 logger = logging.getLogger(__name__)
@@ -208,33 +210,43 @@ async def health_check(db: Session = Depends(get_db)):
 # ============================================================================
 
 @router.post("/generate", response_model=GenerateResponse)
-async def generate(request: GenerateRequest, db: Session = Depends(get_db)):
+async def generate(
+    request: GenerateRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """
     Generate cat image based on repository analysis.
 
+    **Authentication:** Required (session cookie)
+
     Takes a GitHub repository URL, analyzes the code quality, and generates
-    a cat image reflecting the analysis results.
+    a cat image reflecting the analysis results. The generation is linked to
+    the authenticated user.
 
     Args:
         request: GenerateRequest with github_url
+        user: Authenticated user (from session)
         db: Database session
 
     Returns:
         GenerateResponse with analysis results and image data
 
     Raises:
-        HTTPException: 403 (private repo), 404 (not found), 500 (analysis failed)
+        HTTPException: 401 (not authenticated), 403 (private repo),
+                      404 (not found), 500 (analysis failed)
     """
     generation_id = str(uuid.uuid4())
 
-    logger.info(f"Starting generation {generation_id} for {request.github_url}")
+    logger.info(f"Starting generation {generation_id} for {request.github_url} (user: {user.username})")
 
     try:
-        # Create and invoke LangGraph workflow
+        # Create and invoke LangGraph workflow with user_id
         workflow = create_workflow()
         result = workflow.invoke({
             "github_url": request.github_url,
-            "generation_id": generation_id
+            "generation_id": generation_id,
+            "user_id": str(user.id)  # Pass user_id to workflow
         })
 
         # Check for errors in workflow result
@@ -317,3 +329,148 @@ async def generate(request: GenerateRequest, db: Session = Depends(get_db)):
             status_code=500,
             detail=f"Internal server error: {str(e)}"
         )
+
+
+# ============================================================================
+# GENERATIONS LIST ENDPOINT
+# ============================================================================
+
+@router.get("/generations")
+async def list_generations(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    limit: int = 50,
+    offset: int = 0
+):
+    """
+    List user's generations.
+
+    **Authentication:** Required (session cookie)
+
+    Returns a paginated list of all generations created by the authenticated user,
+    ordered by creation date (most recent first).
+
+    Args:
+        user: Authenticated user (from session)
+        db: Database session
+        limit: Maximum number of results (default: 50, max: 100)
+        offset: Number of results to skip (default: 0)
+
+    Returns:
+        List of generation summaries with pagination metadata
+
+    Raises:
+        HTTPException: 401 (not authenticated)
+    """
+    # Validate pagination params
+    limit = min(limit, 100)  # Cap at 100
+    offset = max(offset, 0)  # No negative offsets
+
+    # Query user's generations
+    generations = db.query(Generation).filter(
+        Generation.user_id == user.id
+    ).order_by(
+        Generation.created_at.desc()
+    ).limit(limit).offset(offset).all()
+
+    # Get total count for pagination
+    total_count = db.query(Generation).filter(
+        Generation.user_id == user.id
+    ).count()
+
+    # Build response
+    results = []
+    for gen in generations:
+        results.append({
+            "id": str(gen.id),
+            "github_url": gen.github_url,
+            "repo_owner": gen.repo_owner,
+            "repo_name": gen.repo_name,
+            "primary_language": gen.primary_language,
+            "code_quality_score": gen.code_quality_score,
+            "image_path": gen.image_path,
+            "created_at": gen.created_at.isoformat() if gen.created_at else None
+        })
+
+    return {
+        "success": True,
+        "count": len(results),
+        "total": total_count,
+        "limit": limit,
+        "offset": offset,
+        "has_more": (offset + len(results)) < total_count,
+        "generations": results
+    }
+
+
+# ============================================================================
+# GENERATION DETAIL ENDPOINT (PUBLIC)
+# ============================================================================
+
+@router.get("/generation/{generation_id}")
+async def get_generation(
+    generation_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Get generation details by ID.
+
+    **Authentication:** Not required (public endpoint for sharing)
+
+    Returns complete details about a specific generation, including repository
+    analysis, cat attributes, story, and image data. This endpoint is public
+    to allow sharing of generation links.
+
+    Args:
+        generation_id: UUID of the generation
+        db: Database session
+
+    Returns:
+        Complete generation data (same format as POST /generate response)
+
+    Raises:
+        HTTPException: 404 (generation not found)
+    """
+    # Find generation by ID
+    generation = db.query(Generation).filter(
+        Generation.id == generation_id
+    ).first()
+
+    if not generation:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Generation not found: {generation_id}"
+        )
+
+    # Build response (similar to /generate response)
+    response_data = {
+        "success": True,
+        "generation_id": str(generation.id),
+        "repository": {
+            "url": generation.github_url,
+            "name": generation.repo_name,
+            "owner": generation.repo_owner,
+            "primary_language": generation.primary_language or "Unknown",
+            "size_kb": generation.repo_size_kb,
+            "stars": None  # Not stored in current schema
+        },
+        "analysis": {
+            "code_quality_score": generation.code_quality_score,
+            "files_analyzed": generation.analysis_data.get("files_analyzed", []) if generation.analysis_data else [],
+            "metrics": generation.analysis_data.get("metrics", {}) if generation.analysis_data else {}
+        },
+        "cat_attributes": generation.cat_attributes or {},
+        "story": generation.story,
+        "meme_text": {
+            "top": generation.meme_text_top,
+            "bottom": generation.meme_text_bottom
+        } if generation.meme_text_top or generation.meme_text_bottom else None,
+        "image": {
+            "url": generation.image_path,
+            "binary": None,  # Don't include base64 in detail view (use static file serving)
+            "prompt": generation.image_prompt
+        },
+        "timestamp": generation.created_at.isoformat() if generation.created_at else None
+    }
+
+    return response_data
