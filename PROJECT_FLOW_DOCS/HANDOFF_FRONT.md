@@ -63,13 +63,13 @@ Build an Astro SSR frontend with username/password authentication for the Repo-t
 - **Commit:** `7ad039f` - CRITICAL BUGFIXES: Migration safety and test isolation
 - **Issues Resolved:** Migration with existing data, test database corruption risk
 
-### Stage F4: Astro Project Setup
-- [ ] F4.1: Initialize Astro project in frontend/ directory
-- [ ] F4.2: Install dependencies (@astrojs/node, tailwind)
-- [ ] F4.3: Configure SSR and Tailwind
-- [ ] F4.4: Create project structure (pages, components, lib)
-- [ ] F4.5: Set up environment variables
-- [ ] F4.6: Create documentation (docs/frontend-guide.md)
+### Stage F4: Astro Project Setup ✅
+- [x] F4.1: Initialize Astro project in frontend/ directory
+- [x] F4.2: Install dependencies (@astrojs/node, tailwind, cookie)
+- [x] F4.3: Configure SSR and Tailwind with Oxide colors
+- [x] F4.4: Create project structure (pages, components, lib, styles)
+- [x] F4.5: Set up environment variables (.env, .env.example)
+- [x] F4.6: Create documentation (docs/frontend-guide.md)
 
 ### Stage F5: Authentication UI
 - [ ] F5.1: Create auth helper library (lib/auth.ts)
