@@ -146,6 +146,69 @@ CAT_AGE_MAPPING: Dict[str, Dict[str, Any]] = {
 
 
 # ============================================================================
+# CAT BREED MAPPING - Programming language families to cat breeds
+# ============================================================================
+
+CAT_BREED_MAPPING: Dict[str, Dict[str, Any]] = {
+    # Scripting languages → Tabby (common, striped, approachable)
+    "tabby": {
+        "languages": ["Python", "Ruby", "Perl", "PHP", "Shell", "Bash", "Lua"],
+        "description": "domestic tabby cat with distinctive stripes",
+        "prompt_modifier": "tabby cat with striped fur pattern"
+    },
+
+    # Web/JavaScript ecosystem → Siamese (elegant, colorpoint, refined)
+    "siamese": {
+        "languages": ["JavaScript", "TypeScript", "Dart", "CoffeeScript"],
+        "description": "elegant siamese cat with blue eyes",
+        "prompt_modifier": "siamese cat with blue eyes and colorpoint markings"
+    },
+
+    # Enterprise languages → Persian (fluffy, formal, prestigious)
+    "persian": {
+        "languages": ["Java", "C#", "Scala", "Kotlin", "F#"],
+        "description": "fluffy persian cat with long fur",
+        "prompt_modifier": "persian cat with luxurious long fur and flat face"
+    },
+
+    # Systems languages → Maine Coon (large, rugged, powerful)
+    "maine_coon": {
+        "languages": ["Go", "Rust", "C++", "C", "Zig"],
+        "description": "large maine coon with wild appearance",
+        "prompt_modifier": "maine coon cat, large and majestic with tufted ears"
+    },
+
+    # Functional languages → Scottish Fold (unique, distinctive, mathematical)
+    "scottish_fold": {
+        "languages": ["Haskell", "Elixir", "Clojure", "Erlang", "OCaml"],
+        "description": "scottish fold with folded ears",
+        "prompt_modifier": "scottish fold cat with distinctive folded ears"
+    },
+
+    # Mobile/Modern → British Shorthair (modern, clean, polished)
+    "british_shorthair": {
+        "languages": ["Swift", "Objective-C"],
+        "description": "british shorthair with round face",
+        "prompt_modifier": "british shorthair cat with plush coat and round face"
+    },
+
+    # Data/Statistical → Ragdoll (calm, analytical, methodical)
+    "ragdoll": {
+        "languages": ["R", "MATLAB", "Julia"],
+        "description": "ragdoll cat with calm demeanor",
+        "prompt_modifier": "ragdoll cat with blue eyes and calm, relaxed posture"
+    },
+
+    # Default for unknown languages → Domestic Shorthair
+    "domestic_shorthair": {
+        "languages": [],  # Default fallback
+        "description": "ordinary domestic shorthair",
+        "prompt_modifier": "domestic shorthair cat"
+    }
+}
+
+
+# ============================================================================
 # CAT EXPRESSION MAPPING - Test coverage + code health to expression
 # ============================================================================
 
@@ -222,6 +285,53 @@ def get_language_background(language: str) -> str:
     return DEFAULT_BACKGROUND
 
 
+def get_cat_breed(language: str) -> str:
+    """
+    Get cat breed based on programming language family.
+
+    Maps programming languages to cat breeds for visual variety:
+    - Python/Ruby/PHP → Tabby (striped, common)
+    - JavaScript/TypeScript → Siamese (elegant, blue eyes)
+    - Java/C#/Kotlin → Persian (fluffy, formal)
+    - Rust/C++/Go → Maine Coon (large, powerful)
+    - Haskell/Elixir → Scottish Fold (unique, folded ears)
+    - Swift/Objective-C → British Shorthair (modern, clean)
+    - R/MATLAB → Ragdoll (calm, analytical)
+    - Unknown → Domestic Shorthair (default)
+
+    Args:
+        language: Programming language name (e.g., "Python", "rust")
+
+    Returns:
+        str: Breed key (e.g., "tabby", "siamese", "persian")
+
+    Examples:
+        >>> get_cat_breed("Python")
+        'tabby'
+        >>> get_cat_breed("JavaScript")
+        'siamese'
+        >>> get_cat_breed("Rust")
+        'maine_coon'
+        >>> get_cat_breed("UnknownLang")
+        'domestic_shorthair'
+    """
+    # Handle None or empty language
+    if not language:
+        return "domestic_shorthair"
+
+    # Normalize language (case-insensitive)
+    language_normalized = language.strip()
+
+    # Search through breed mappings
+    for breed, config in CAT_BREED_MAPPING.items():
+        for lang in config["languages"]:
+            if lang.lower() == language_normalized.lower():
+                return breed
+
+    # Default fallback
+    return "domestic_shorthair"
+
+
 # ============================================================================
 # MODULE EXPORTS
 # ============================================================================
@@ -232,6 +342,8 @@ __all__ = [
     "CAT_SIZE_MAPPING",
     "CAT_AGE_MAPPING",
     "CAT_EXPRESSION_MAPPING",
+    "CAT_BREED_MAPPING",
     "get_language_background",
+    "get_cat_breed",
     "DEFAULT_BACKGROUND",
 ]

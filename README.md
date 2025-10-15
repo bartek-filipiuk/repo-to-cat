@@ -4,27 +4,39 @@ Generate unique cat images based on GitHub repository code quality!
 
 ## Overview
 
-Repo-to-Cat analyzes GitHub repositories and generates AI-powered cat images that reflect the codebase's quality. Each cat's appearance (size, age, beauty, expression, background) is determined by code metrics, providing an entertaining visualization of repository health.
+Repo-to-Cat analyzes GitHub repositories and generates AI-powered cat images that reflect the codebase's quality. Each cat's appearance (size, age, beauty, expression, background, breed) is determined by code metrics, providing an entertaining visualization of repository health. Features a modern web interface and 100% LLM-generated meme text for maximum creativity.
 
 ## Features
 
 - 🔍 **Smart Code Analysis**: Analyzes 3-5 strategic files using AI (no full repo cloning needed)
 - 🎨 **Unique Cat Images**: Generated with FLUX.1.1-pro based on code quality
+- 🐾 **Breed Variation**: Language-specific cat breeds (Python→Tabby, JavaScript→Siamese, Rust→Maine Coon, etc.)
 - 📖 **Funny Stories**: AI-generated 3-5 sentence stories about your repository (friendly roast style)
-- 😹 **Meme Text Overlay**: Classic top/bottom meme text added to cat images
+- 🌍 **Multi-Language Support**: Handles repos with multiple languages, mentions breakdown in stories
+- 😹 **AI Meme Generation**: 100% LLM-generated meme text with context-aware humor
+- 🎯 **Dynamic Text Sizing**: Auto-adjusts font size to prevent text overflow
 - 🤖 **AI-Powered**: Uses LangGraph workflow with google/gemini-2.5-flash for analysis
 - 📊 **Detailed Insights**: Returns comprehensive JSON with analysis metrics
 - 🚀 **Fast**: No repo cloning, uses GitHub Contents API directly
+- 🖥️ **Modern Web Interface**: Astro 5.1 frontend with responsive design
 
 ## Tech Stack
 
-- **Backend**: FastAPI + Python 3.11+
-- **AI**: LangChain 0.3.0 + LangGraph 0.2.74
-- **LLM**: OpenRouter (google/gemini-2.5-flash)
+### Frontend
+- **Framework**: Astro 5.1
+- **Styling**: Tailwind CSS
+- **Deployment**: Static site (4321 dev port)
+
+### Backend
+- **API**: FastAPI + Python 3.11+
+- **AI Orchestration**: LangChain 0.3.0 + LangGraph 0.2.74
+- **Code Analysis**: OpenRouter (google/gemini-2.5-flash)
+- **Story Generation**: OpenRouter (google/gemini-2.5-flash, temperature 0.9)
+- **Meme Generation**: OpenRouter (google/gemini-2.5-flash, temperature 0.9)
 - **Image Generation**: Together.ai (FLUX.1.1-pro, 768x432)
-- **Image Processing**: Pillow (text overlay, meme generation)
-- **GitHub**: PyGithub + GitHub Contents API
-- **Database**: PostgreSQL + SQLAlchemy + Alembic
+- **Image Processing**: Pillow (text overlay, dynamic font sizing)
+- **GitHub Integration**: PyGithub + GitHub Contents API
+- **Database**: PostgreSQL 15 + SQLAlchemy 2.0 + Alembic
 - **Testing**: pytest + pytest-asyncio (80% coverage target)
 
 ## Quick Start
@@ -40,6 +52,8 @@ Repo-to-Cat analyzes GitHub repositories and generates AI-powered cat images tha
 
 ### Installation
 
+#### Backend Setup
+
 1. **Clone repository:**
    ```bash
    git clone https://github.com/yourusername/repo-to-cat.git
@@ -54,12 +68,15 @@ Repo-to-Cat analyzes GitHub repositories and generates AI-powered cat images tha
 3. **Configure environment:**
    ```bash
    cp .env.example .env
-   # Edit .env with your API keys
+   # Edit .env with your API keys:
+   # - GITHUB_TOKEN
+   # - OPENROUTER_API_KEY
+   # - TOGETHER_API_KEY
    ```
 
 4. **Start database:**
    ```bash
-   docker-compose up -d db
+   docker compose up -d postgres
    ```
 
 5. **Run migrations:**
@@ -67,15 +84,33 @@ Repo-to-Cat analyzes GitHub repositories and generates AI-powered cat images tha
    alembic upgrade head
    ```
 
-6. **Start server:**
+6. **Start backend server:**
    ```bash
-   uvicorn app.main:app --reload
+   uvicorn app.main:app --reload --port 8000
    ```
 
-7. **Visit API docs:**
+#### Frontend Setup
+
+1. **Navigate to frontend:**
+   ```bash
+   cd frontend
    ```
-   http://localhost:8000/docs
+
+2. **Install dependencies:**
+   ```bash
+   npm install
    ```
+
+3. **Start frontend dev server:**
+   ```bash
+   npm run dev
+   ```
+
+#### Access Application
+
+- **Web Interface**: http://localhost:4321
+- **API Docs**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/health
 
 ## API Usage
 
@@ -98,24 +133,39 @@ curl -X POST http://localhost:8000/generate \
     "owner": "torvalds",
     "primary_language": "C",
     "size_kb": 1234567,
-    "stars": 150000
+    "stars": 150000,
+    "language_breakdown": [
+      {"language": "C", "percentage": 97.8},
+      {"language": "Assembly", "percentage": 1.2},
+      {"language": "Python", "percentage": 0.5}
+    ]
   },
   "analysis": {
     "code_quality_score": 9.2,
     "files_analyzed": ["README.md", "kernel/main.c", "..."],
-    "metrics": { "..." }
+    "metrics": {
+      "has_tests": true,
+      "has_ci": true,
+      "has_documentation": true
+    }
   },
   "cat_attributes": {
-    "size": "large",
-    "age": "old",
+    "size": "very_large",
+    "age": "senior",
+    "breed": "Norwegian Forest Cat",
     "beauty_score": 9.2,
     "expression": "happy",
     "background": "gears and metal"
   },
+  "story": "The linux repository is a wise old cat that has seen it all...",
+  "meme_text": {
+    "top": "KERNEL LEVEL MASTERY",
+    "bottom": "C CODE GOES BRRRR"
+  },
   "image": {
     "url": "/generated_images/uuid-here.png",
     "binary": "base64-encoded-image",
-    "prompt": "A large, beautiful old cat with happy expression..."
+    "prompt": "A very large, beautiful senior Norwegian Forest Cat with happy expression..."
   }
 }
 ```
@@ -143,9 +193,12 @@ pytest tests/unit/test_config.py -v
 
 ### Project Status
 
-🚧 **MVP Development** - See [HANDOFF.md](PROJECT_FLOW_DOCS/HANDOFF.md) for progress
+✅ **MVP Complete** - See [HANDOFF.md](PROJECT_FLOW_DOCS/HANDOFF.md) for full development history
 
-**Current Stage:** Stage 1.1 - Basic Project Structure ✅
+**Completed:**
+- Stage 1: Project setup, database, FastAPI skeleton
+- Stage 8: Full API endpoints, story generation, meme generation
+- MVP Improvements: Breed variation, multi-language support, LLM meme generation
 
 ### Documentation
 
@@ -158,22 +211,26 @@ pytest tests/unit/test_config.py -v
 
 ## How It Works
 
-1. **Input**: GitHub repository URL
-2. **Metadata**: Fetch repo metadata (language, size, stars)
+1. **Input**: GitHub repository URL (via web interface or API)
+2. **Metadata**: Fetch repo metadata (language, size, stars, language breakdown)
 3. **File Selection**: Pick 5 strategic files (README, entry point, core, test, config)
-4. **Analysis**: Analyze code quality with AI (gemini-2.5-flash)
-5. **Mapping**: Map metrics to cat attributes
-6. **Generation**: Create cat image with FLUX.1.1-pro
-7. **Storage**: Save to database and local storage
-8. **Output**: Return detailed JSON + image
+4. **Code Analysis**: Analyze code quality with AI (gemini-2.5-flash)
+5. **Cat Mapping**: Map metrics to cat attributes (size, age, expression, breed)
+6. **Story Generation**: Generate funny 3-5 sentence story (gemini-2.5-flash, temp 0.9)
+7. **Image Generation**: Create cat image with FLUX.1.1-pro (768x432)
+8. **Meme Text**: Generate context-aware meme text (gemini-2.5-flash, temp 0.9)
+9. **Text Overlay**: Add meme text with dynamic font sizing
+10. **Storage**: Save to PostgreSQL + local storage
+11. **Output**: Return JSON + image via API or display in web UI
 
 ## Cat Attribute Mapping
 
-- **Size**: Repository size (kitten → chonky cat)
-- **Age**: Language age + commit history (young → old)
-- **Beauty**: Code quality score (ugly → pretty)
-- **Background**: Language-specific (Python=snakes, JS=coffee, Go=gophers)
-- **Expression**: Test coverage (grumpy → happy)
+- **Size**: Repository size (small → medium → large → very_large)
+- **Age**: Code quality score (kitten → young → adult → senior)
+- **Beauty**: Code quality score (0-10 directly mapped)
+- **Expression**: Test coverage & quality (grumpy → concerned → neutral → happy)
+- **Background**: Language-specific (Python=snakes, JS=coffee, Rust=gears, Go=mountains, Java=office)
+- **Breed**: Language-specific (Python=Tabby, JS=Siamese, Rust=Maine Coon, Go=British Shorthair, etc.)
 
 ## Documentation
 
@@ -215,14 +272,15 @@ MIT
 ## Credits
 
 Built with:
-- [FastAPI](https://fastapi.tiangolo.com/)
-- [LangChain](https://python.langchain.com/)
-- [LangGraph](https://langchain-ai.github.io/langgraph/)
-- [Together.ai](https://www.together.ai/)
-- [OpenRouter](https://openrouter.ai/)
+- [Astro](https://astro.build/) - Modern web framework
+- [FastAPI](https://fastapi.tiangolo.com/) - Python web framework
+- [LangChain](https://python.langchain.com/) - LLM framework
+- [LangGraph](https://langchain-ai.github.io/langgraph/) - Workflow orchestration
+- [Together.ai](https://www.together.ai/) - Image generation (FLUX.1.1-pro)
+- [OpenRouter](https://openrouter.ai/) - LLM API gateway (Gemini 2.5 Flash)
 
 ---
 
-**Status**: 🚧 Early Development
-**Version**: 0.2.0 (Stage 8 Complete - API + Stories + Memes)
-**Last Updated**: 2025-10-13
+**Status**: ✅ MVP Complete with Improvements
+**Version**: 0.3.0 (MVP + Breed Variation + Multi-Language + LLM Memes)
+**Last Updated**: 2025-10-15

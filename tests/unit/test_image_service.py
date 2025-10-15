@@ -414,6 +414,230 @@ class TestCreateImagePrompt:
 
 
 # ============================================================================
+# Test: Breed Variation
+# ============================================================================
+
+class TestBreedVariation:
+    """Test cat breed variation based on programming language."""
+
+    def test_python_produces_tabby_breed(self):
+        """Test that Python language produces tabby cat breed."""
+        cat_attrs = {
+            "size": "medium",
+            "age": "adult",
+            "beauty_score": 7.0,
+            "expression": "neutral",
+            "background": "snakes and code snippets",
+            "language": "Python"
+        }
+
+        prompt = create_image_prompt(cat_attrs)
+
+        assert "tabby" in prompt.lower()
+        assert "striped" in prompt.lower() or "stripe" in prompt.lower()
+
+    def test_javascript_produces_siamese_breed(self):
+        """Test that JavaScript language produces siamese cat breed."""
+        cat_attrs = {
+            "size": "medium",
+            "age": "adult",
+            "beauty_score": 7.0,
+            "expression": "neutral",
+            "background": "coffee cups and laptops",
+            "language": "JavaScript"
+        }
+
+        prompt = create_image_prompt(cat_attrs)
+
+        assert "siamese" in prompt.lower()
+        assert "blue eyes" in prompt.lower()
+
+    def test_java_produces_persian_breed(self):
+        """Test that Java language produces persian cat breed."""
+        cat_attrs = {
+            "size": "large",
+            "age": "adult",
+            "beauty_score": 7.0,
+            "expression": "neutral",
+            "background": "coffee beans and enterprise buildings",
+            "language": "Java"
+        }
+
+        prompt = create_image_prompt(cat_attrs)
+
+        assert "persian" in prompt.lower()
+        assert "long fur" in prompt.lower()
+
+    def test_rust_produces_maine_coon_breed(self):
+        """Test that Rust language produces maine coon cat breed."""
+        cat_attrs = {
+            "size": "large",
+            "age": "adult",
+            "beauty_score": 8.0,
+            "expression": "neutral",
+            "background": "gears and orange crab",
+            "language": "Rust"
+        }
+
+        prompt = create_image_prompt(cat_attrs)
+
+        assert "maine coon" in prompt.lower()
+        assert "majestic" in prompt.lower() or "tufted ears" in prompt.lower()
+
+    def test_go_produces_maine_coon_breed(self):
+        """Test that Go language produces maine coon cat breed."""
+        cat_attrs = {
+            "size": "medium",
+            "age": "adult",
+            "beauty_score": 7.0,
+            "expression": "neutral",
+            "background": "gophers and mountains",
+            "language": "Go"
+        }
+
+        prompt = create_image_prompt(cat_attrs)
+
+        assert "maine coon" in prompt.lower()
+
+    def test_haskell_produces_scottish_fold_breed(self):
+        """Test that Haskell language produces scottish fold cat breed."""
+        cat_attrs = {
+            "size": "small",
+            "age": "adult",
+            "beauty_score": 7.0,
+            "expression": "neutral",
+            "background": "lambda symbols and equations",
+            "language": "Haskell"
+        }
+
+        prompt = create_image_prompt(cat_attrs)
+
+        assert "scottish fold" in prompt.lower()
+        assert "folded ears" in prompt.lower()
+
+    def test_swift_produces_british_shorthair_breed(self):
+        """Test that Swift language produces british shorthair cat breed."""
+        cat_attrs = {
+            "size": "medium",
+            "age": "adult",
+            "beauty_score": 7.5,
+            "expression": "neutral",
+            "background": "bird feathers and iOS devices",
+            "language": "Swift"
+        }
+
+        prompt = create_image_prompt(cat_attrs)
+
+        assert "british shorthair" in prompt.lower()
+        assert "round face" in prompt.lower() or "plush" in prompt.lower()
+
+    def test_unknown_language_produces_domestic_shorthair_breed(self):
+        """Test that unknown language produces domestic shorthair (default)."""
+        cat_attrs = {
+            "size": "medium",
+            "age": "adult",
+            "beauty_score": 7.0,
+            "expression": "neutral",
+            "background": "generic code editor",
+            "language": "UnknownLang123"
+        }
+
+        prompt = create_image_prompt(cat_attrs)
+
+        assert "domestic shorthair" in prompt.lower()
+
+    def test_case_insensitive_language_matching(self):
+        """Test that language matching is case-insensitive."""
+        cat_attrs_upper = {
+            "size": "medium",
+            "age": "adult",
+            "beauty_score": 7.0,
+            "expression": "neutral",
+            "background": "snakes and code",
+            "language": "PYTHON"
+        }
+
+        cat_attrs_lower = {
+            "size": "medium",
+            "age": "adult",
+            "beauty_score": 7.0,
+            "expression": "neutral",
+            "background": "snakes and code",
+            "language": "python"
+        }
+
+        prompt_upper = create_image_prompt(cat_attrs_upper)
+        prompt_lower = create_image_prompt(cat_attrs_lower)
+
+        # Both should produce tabby
+        assert "tabby" in prompt_upper.lower()
+        assert "tabby" in prompt_lower.lower()
+
+    def test_different_languages_produce_different_breeds(self):
+        """Test that different language families produce distinct breeds."""
+        python_attrs = {
+            "size": "medium",
+            "age": "adult",
+            "beauty_score": 7.0,
+            "expression": "neutral",
+            "background": "snakes",
+            "language": "Python"
+        }
+
+        javascript_attrs = {
+            "size": "medium",
+            "age": "adult",
+            "beauty_score": 7.0,
+            "expression": "neutral",
+            "background": "coffee",
+            "language": "JavaScript"
+        }
+
+        rust_attrs = {
+            "size": "medium",
+            "age": "adult",
+            "beauty_score": 7.0,
+            "expression": "neutral",
+            "background": "gears",
+            "language": "Rust"
+        }
+
+        python_prompt = create_image_prompt(python_attrs)
+        javascript_prompt = create_image_prompt(javascript_attrs)
+        rust_prompt = create_image_prompt(rust_attrs)
+
+        # Verify each has its own breed
+        assert "tabby" in python_prompt.lower()
+        assert "siamese" in javascript_prompt.lower()
+        assert "maine coon" in rust_prompt.lower()
+
+        # Verify prompts are different
+        assert python_prompt != javascript_prompt
+        assert python_prompt != rust_prompt
+        assert javascript_prompt != rust_prompt
+
+    def test_breed_in_prompt_with_all_other_attributes(self):
+        """Test that breed is properly integrated with size, age, and expression."""
+        cat_attrs = {
+            "size": "large",
+            "age": "senior",
+            "beauty_score": 9.0,
+            "expression": "happy",
+            "background": "coffee beans",
+            "language": "Java"
+        }
+
+        prompt = create_image_prompt(cat_attrs)
+
+        # Should include all elements
+        assert "persian" in prompt.lower()  # breed
+        assert any(word in prompt.lower() for word in ["large", "chonk"])  # size
+        assert "senior" in prompt.lower() or "wise" in prompt.lower()  # age
+        assert "happy" in prompt.lower() or "happily" in prompt.lower()  # expression
+        assert "coffee" in prompt.lower()  # background
+
+
+# ============================================================================
 # Test: save_image_locally()
 # ============================================================================
 

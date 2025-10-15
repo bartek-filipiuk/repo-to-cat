@@ -27,7 +27,9 @@ from config.mappings import (
     CAT_SIZE_MAPPING,
     CAT_AGE_MAPPING,
     CAT_EXPRESSION_MAPPING,
-    get_language_background
+    CAT_BREED_MAPPING,
+    get_language_background,
+    get_cat_breed
 )
 from app.core.config import settings
 
@@ -155,6 +157,7 @@ def create_image_prompt(cat_attrs: Dict[str, Any]) -> str:
 
     Creates a detailed prompt describing the cat based on attributes:
     - Size, age, expression
+    - Breed (based on programming language)
     - Code quality (beauty)
     - Language-specific background
 
@@ -165,6 +168,7 @@ def create_image_prompt(cat_attrs: Dict[str, Any]) -> str:
             - beauty_score: Beauty/quality score (0-10)
             - expression: Cat expression (happy, neutral, concerned, grumpy)
             - background: Background theme
+            - language: Programming language (for breed selection)
 
     Returns:
         str: Detailed image generation prompt
@@ -175,13 +179,19 @@ def create_image_prompt(cat_attrs: Dict[str, Any]) -> str:
         ...     "age": "adult",
         ...     "beauty_score": 7.5,
         ...     "expression": "happy",
-        ...     "background": "snakes and code snippets"
+        ...     "background": "snakes and code snippets",
+        ...     "language": "Python"
         ... }
         >>> prompt = create_image_prompt(cat_attrs)
-        >>> "medium" in prompt.lower()
+        >>> "tabby" in prompt.lower()
         True
     """
     logger.info("Generating image prompt")
+
+    # Get breed based on language
+    language = cat_attrs.get("language", "Unknown")
+    breed_key = get_cat_breed(language)
+    breed_desc = CAT_BREED_MAPPING[breed_key]["prompt_modifier"]
 
     # Get size description
     size_desc = CAT_SIZE_MAPPING.get(
@@ -212,15 +222,15 @@ def create_image_prompt(cat_attrs: Dict[str, Any]) -> str:
     else:
         beauty_modifier = "scruffy, disheveled"
 
-    # Construct prompt
+    # Construct prompt with breed
     prompt = (
-        f"A {beauty_modifier} {age_desc}, {size_desc} with a {expression_desc}. "
+        f"A {beauty_modifier} {age_desc}, {size_desc} {breed_desc} with a {expression_desc}. "
         f"Background: {background}. "
         f"Photorealistic, detailed fur texture, professional photography, 8k quality. "
         f"The cat should look natural and lifelike."
     )
 
-    logger.info(f"Generated prompt: {prompt[:100]}...")
+    logger.info(f"Generated prompt ({breed_key} breed): {prompt[:100]}...")
 
     return prompt
 
@@ -318,16 +328,20 @@ def generate_meme_text(
     openrouter_provider
 ) -> Tuple[str, str]:
     """
-    Generate meme-style text for image overlay using OpenRouter.
+    Generate meme-style text for image overlay using LLM with example-based prompting.
 
-    Creates funny, short (2-4 words) text for top and bottom of image.
-    Uses LLM for creative, context-aware meme text generation.
+    Creates funny, short (3-8 words) text for top and bottom of image.
+    Uses 100% LLM generation with curated examples for style inspiration,
+    ensuring unique, context-aware content every time.
 
     Args:
         metadata: Repository metadata dict
             - name: Repository name
+            - owner: Repository owner
             - primary_language: Main language
+            - language_breakdown: List of language percentages
             - size_kb: Size in KB
+            - stars: GitHub stars count
         analysis: Code analysis results dict
             - code_quality_score: Quality score (0-10)
             - metrics: Dict with has_tests, etc.
@@ -337,63 +351,113 @@ def generate_meme_text(
         openrouter_provider: OpenRouter API provider instance
 
     Returns:
-        Tuple[str, str]: (top_text, bottom_text) - both uppercase, 2-4 words each
+        Tuple[str, str]: (top_text, bottom_text) - both uppercase, 3-8 words each
 
     Example:
-        >>> metadata = {"primary_language": "Python", "size_kb": 1}
-        >>> analysis = {"code_quality_score": 5.6, "metrics": {"has_tests": False}}
-        >>> cat_attrs = {"expression": "concerned", "size": "small"}
+        >>> metadata = {"name": "react", "owner": "facebook", "primary_language": "JavaScript"}
+        >>> analysis = {"code_quality_score": 9.0, "metrics": {"has_tests": True}}
+        >>> cat_attrs = {"expression": "happy", "size": "large"}
         >>> top, bottom = generate_meme_text(metadata, analysis, cat_attrs, provider)
-        >>> len(top.split()) <= 4
+        >>> len(top.split()) <= 8
         True
     """
-    logger.info("Generating meme text for image overlay")
+    logger.info("Generating LLM-based meme text for image overlay")
 
-    # Extract relevant info
+    # Extract repository context
+    repo_name = metadata.get("name", "Unknown")
+    owner = metadata.get("owner", "Unknown")
     language = metadata.get("primary_language", "Unknown")
+    stars = metadata.get("stars", 0)
+    language_breakdown = metadata.get("language_breakdown", [])
+
+    # Extract metrics
     quality_score = analysis.get("code_quality_score", 5.0)
     has_tests = analysis.get("metrics", {}).get("has_tests", False)
     expression = cat_attrs.get("expression", "neutral")
     size = cat_attrs.get("size", "medium")
 
-    # Build prompt for OpenRouter
-    prompt = f"""Generate meme text (TOP and BOTTOM) for a repository cat image.
+    # Determine code health description
+    if quality_score >= 8:
+        health = "Excellent ✓"
+    elif quality_score >= 6:
+        health = "Good"
+    elif quality_score >= 4:
+        health = "Needs Work"
+    else:
+        health = "Spaghetti Code"
 
-Repository Info:
-- Language: {language}
-- Code Quality: {quality_score}/10
-- Has Tests: {"Yes" if has_tests else "No"}
-- Cat Expression: {expression}
-- Cat Size: {size}
+    # Build language context
+    lang_context = f"Primary Language: {language}"
+    if language_breakdown and len(language_breakdown) > 1:
+        langs_str = ", ".join([
+            f"{item['language']} ({item['percentage']}%)"
+            for item in language_breakdown[:3]  # Top 3
+        ])
+        lang_context = f"Languages: {langs_str}"
 
-Requirements:
-- Generate TWO short phrases (2-4 words each)
-- Style: Meme format, funny, uppercase
-- TOP text: Usually about the language or main characteristic
-- BOTTOM text: Usually the punchline about code quality or tests
-- Be funny but friendly (no harsh insults)
+    # Build enhanced prompt (format-focused, no content examples)
+    prompt = f"""Generate meme text for GitHub repository: {owner}/{repo_name}
 
-Examples:
-TOP: "PYTHON SPAGHETTI"
-BOTTOM: "NO TESTS FOUND"
+REPOSITORY CONTEXT:
+- Repository: {owner}/{repo_name}
+- Stars: {stars:,}
+- {lang_context}
+- Code Quality Score: {quality_score}/10
+- Code Health: {health}
+- Has Tests: {"Yes ✓" if has_tests else "No ✗"}
 
-TOP: "HELLO WORLD"
-BOTTOM: "VERY CODE"
+FORMAT REQUIREMENTS:
+- Generate TWO text phrases: TOP and BOTTOM
+- Each phrase: 2-8 words (keep it punchy!)
+- ALL UPPERCASE letters
+- Use this exact format:
+  TOP: [your text]
+  BOTTOM: [your text]
 
-TOP: "RUST SAFETY"
-BOTTOM: "ZERO DEFECTS"
+STYLE GUIDELINES:
+- Energetic programmer humor with internet slang
+- Reference the actual repository language, name, or code quality
+- Friendly roast tone (funny but not mean)
+- Be creative and unique - avoid repetitive phrases
+
+HUMOR IDEAS (mix and match creatively):
+- Language-specific jokes:
+  * Python: imports, indentation, decorators
+  * JavaScript: undefined, callbacks, dependencies
+  * Rust: borrow checker, memory safety, speed
+  * Go: error handling, goroutines, simplicity
+  * Java: factories, null pointers, enterprise
+  * Shell/Bash: pipes, scripts, automation
+  * HTML: markup, not programming, static
+
+- Internet slang options (use sparingly, vary it):
+  * Energy: "GO BRRRR", "LETS GOOO", "FR FR"
+  * Status: "LEFT THE CHAT", "ACTIVATED", "NO CAP"
+  * Approval: "BASED", "W", "BUSSIN"
+
+- Code quality jokes:
+  * High quality (8+): proud, clean, professional
+  * Medium (6-7): decent, works, acceptable
+  * Low (4-5): concerning, messy, chaotic
+  * Very low (<4): spaghetti, disaster, help
+
+- Testing jokes:
+  * No tests: "YOLO MODE", "PRODUCTION IS TEST"
+  * Has tests: "TESTED", "COVERED", "CERTIFIED"
+
+IMPORTANT: Be creative! Don't repeat the same phrases. Make each meme unique and context-specific.
 
 Generate meme text in this EXACT format:
-TOP: [your text here]
-BOTTOM: [your text here]"""
+TOP: [your creative text here]
+BOTTOM: [your punchline here]"""
 
     try:
-        # Call OpenRouter
+        # Call OpenRouter with higher temperature for creativity
         response = openrouter_provider.generate_text(
             prompt=prompt,
-            system_message="You are a meme text generator. Create funny, short phrases for top and bottom of images.",
-            temperature=0.8,
-            max_tokens=100
+            system_message="You are a hilarious meme text generator who creates funny, energetic programmer humor. Use internet slang and be creative!",
+            temperature=0.9,  # Higher temperature for more variety
+            max_tokens=150  # Allow more space for creative responses
         )
 
         # Parse response
@@ -437,16 +501,19 @@ def add_text_to_image(
     stroke_width: int = 4
 ) -> bytes:
     """
-    Add meme-style text overlay to image using PIL.
+    Add meme-style text overlay to image using PIL with dynamic font sizing.
 
     Draws white text with black outline at top and bottom of image,
-    centered horizontally. Classic meme style.
+    centered horizontally. Font size adjusts based on text length:
+    - Short text (≤20 chars): 60px
+    - Medium text (21-35 chars): 45px
+    - Long text (>35 chars): 30px
 
     Args:
         image_bytes: Image data as bytes
         top_text: Text for top (will be uppercased)
         bottom_text: Text for bottom (will be uppercased)
-        font_size: Font size in points (default: 60)
+        font_size: Base font size in points (default: 60, auto-adjusted)
         stroke_width: Width of black outline (default: 4)
 
     Returns:
@@ -472,24 +539,65 @@ def add_text_to_image(
         # Create drawing context
         draw = ImageDraw.Draw(img)
 
-        # Load font (try Impact, fall back to default)
-        font = _find_font("impact.ttf", font_size)
-
         # Convert text to uppercase
         top_text = top_text.upper()
         bottom_text = bottom_text.upper()
 
+        # Calculate dynamic font size for top text
+        top_length = len(top_text)
+        if top_length <= 15:
+            top_font_size = 60
+        elif top_length <= 25:
+            top_font_size = 45
+        elif top_length <= 35:
+            top_font_size = 35
+        else:
+            top_font_size = 28
+
+        # Calculate dynamic font size for bottom text
+        bottom_length = len(bottom_text)
+        if bottom_length <= 15:
+            bottom_font_size = 60
+        elif bottom_length <= 25:
+            bottom_font_size = 45
+        elif bottom_length <= 35:
+            bottom_font_size = 35
+        else:
+            bottom_font_size = 28
+
+        logger.info(f"Font sizes - TOP: {top_font_size}px ({top_length} chars), BOTTOM: {bottom_font_size}px ({bottom_length} chars)")
+
+        # Load fonts with calculated sizes
+        top_font = _find_font("impact.ttf", top_font_size)
+        bottom_font = _find_font("impact.ttf", bottom_font_size)
+
         # Draw top text
         if top_text:
-            bbox = draw.textbbox((0, 0), top_text, font=font)
+            bbox = draw.textbbox((0, 0), top_text, font=top_font)
             text_width = bbox[2] - bbox[0]
+            # Account for stroke width (adds pixels on both sides)
+            total_width = text_width + (stroke_width * 2)
+
+            # Ensure text fits within image bounds with margin
+            margin = int(width * 0.02)  # 2% margin on each side
+            available_width = width - (margin * 2)
+
+            if total_width > available_width:
+                # Reduce font size to fit
+                scale_factor = available_width / total_width
+                top_font_size = int(top_font_size * scale_factor)
+                top_font = _find_font("impact.ttf", top_font_size)
+                bbox = draw.textbbox((0, 0), top_text, font=top_font)
+                text_width = bbox[2] - bbox[0]
+                logger.info(f"TOP text scaled down to {top_font_size}px to fit")
+
             top_x = (width - text_width) // 2
             top_y = int(height * 0.05)
 
             draw.text(
                 (top_x, top_y),
                 top_text,
-                font=font,
+                font=top_font,
                 fill="white",
                 stroke_width=stroke_width,
                 stroke_fill="black"
@@ -497,16 +605,33 @@ def add_text_to_image(
 
         # Draw bottom text
         if bottom_text:
-            bbox = draw.textbbox((0, 0), bottom_text, font=font)
+            bbox = draw.textbbox((0, 0), bottom_text, font=bottom_font)
             text_width = bbox[2] - bbox[0]
             text_height = bbox[3] - bbox[1]
+            # Account for stroke width (adds pixels on both sides)
+            total_width = text_width + (stroke_width * 2)
+
+            # Ensure text fits within image bounds with margin
+            margin = int(width * 0.02)  # 2% margin on each side
+            available_width = width - (margin * 2)
+
+            if total_width > available_width:
+                # Reduce font size to fit
+                scale_factor = available_width / total_width
+                bottom_font_size = int(bottom_font_size * scale_factor)
+                bottom_font = _find_font("impact.ttf", bottom_font_size)
+                bbox = draw.textbbox((0, 0), bottom_text, font=bottom_font)
+                text_width = bbox[2] - bbox[0]
+                text_height = bbox[3] - bbox[1]
+                logger.info(f"BOTTOM text scaled down to {bottom_font_size}px to fit")
+
             bottom_x = (width - text_width) // 2
             bottom_y = height - text_height - int(height * 0.08)
 
             draw.text(
                 (bottom_x, bottom_y),
                 bottom_text,
-                font=font,
+                font=bottom_font,
                 fill="white",
                 stroke_width=stroke_width,
                 stroke_fill="black"

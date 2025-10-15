@@ -74,6 +74,7 @@ def generate_repository_story(
     stars = metadata.get("stars", 0)
     quality_score = analysis.get("code_quality_score", 5.0)
     has_tests = analysis.get("metrics", {}).get("has_tests", False)
+    language_breakdown = metadata.get("language_breakdown", [])
 
     # Cat personality
     cat_size = cat_attrs.get("size", "medium")
@@ -102,12 +103,18 @@ def generate_repository_story(
         "grumpy": "scowling at everyone who looks its way"
     }.get(cat_expression, "neutral")
 
+    # Format language breakdown for prompt
+    language_info = f"Primary Language: {language}"
+    if language_breakdown and len(language_breakdown) > 1:
+        breakdown_parts = [f"{item['language']} ({item['percentage']}%)" for item in language_breakdown]
+        language_info = f"Languages: {', '.join(breakdown_parts)}"
+
     # Build prompt for OpenRouter
     prompt = f"""Generate a funny, friendly 3-5 sentence story about this GitHub repository as if it were a cat.
 
 Repository Details:
 - Name: {owner}/{repo_name}
-- Language: {language}
+- {language_info}
 - Size: {size_kb} KB
 - Stars: {stars}
 - Code Quality: {quality_score}/10

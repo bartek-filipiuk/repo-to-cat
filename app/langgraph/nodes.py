@@ -24,6 +24,7 @@ from datetime import datetime
 from app.langgraph.state import WorkflowState
 from app.services.github_service import (
     get_repository_metadata,
+    get_repository_languages,
     get_file_tree,
     select_strategic_files,
     fetch_file_contents
@@ -52,7 +53,7 @@ def extract_metadata_node(state: WorkflowState) -> Dict[str, Any]:
     Extract repository metadata from GitHub.
 
     Fetches basic repository information including name, owner, size,
-    stars, and primary language using GitHub API.
+    stars, primary language, and language breakdown using GitHub API.
 
     Args:
         state: Current workflow state (requires github_url)
@@ -68,7 +69,38 @@ def extract_metadata_node(state: WorkflowState) -> Dict[str, Any]:
 
     metadata = get_repository_metadata(state["github_url"])
 
+    # Fetch language breakdown (e.g., {"Python": 85000, "JavaScript": 12000})
+    languages = get_repository_languages(state["github_url"])
+
+    # Calculate percentages and format top 3 languages
+    if languages:
+        total_bytes = sum(languages.values())
+        language_percentages = {
+            lang: (bytes_count / total_bytes * 100)
+            for lang, bytes_count in languages.items()
+        }
+
+        # Sort by percentage descending and get top 3
+        sorted_languages = sorted(
+            language_percentages.items(),
+            key=lambda x: x[1],
+            reverse=True
+        )[:3]
+
+        # Add to metadata
+        metadata["languages"] = languages
+        metadata["language_breakdown"] = [
+            {"language": lang, "percentage": round(pct, 1)}
+            for lang, pct in sorted_languages
+        ]
+    else:
+        metadata["languages"] = {}
+        metadata["language_breakdown"] = []
+
     logger.info(f"Metadata extracted: {metadata['name']} ({metadata['primary_language']})")
+    if metadata["language_breakdown"]:
+        breakdown_str = ", ".join([f"{item['language']} {item['percentage']}%" for item in metadata["language_breakdown"]])
+        logger.info(f"Language breakdown: {breakdown_str}")
 
     return {"metadata": metadata}
 
