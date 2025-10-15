@@ -34,8 +34,9 @@ from app.api.schemas import AnalysisResult
 class TestExtractMetadataNode:
     """Tests for extract_metadata_node."""
 
+    @patch('app.langgraph.nodes.get_repository_languages')
     @patch('app.langgraph.nodes.get_repository_metadata')
-    def test_extract_metadata_success(self, mock_get_metadata):
+    def test_extract_metadata_success(self, mock_get_metadata, mock_get_languages):
         """Test successful metadata extraction."""
         # Mock response
         mock_get_metadata.return_value = {
@@ -45,6 +46,12 @@ class TestExtractMetadataNode:
             "stars": 42,
             "primary_language": "Python",
             "description": "A test repository"
+        }
+
+        # Mock language breakdown
+        mock_get_languages.return_value = {
+            "Python": 100000,
+            "JavaScript": 20000
         }
 
         # Create state
@@ -61,7 +68,126 @@ class TestExtractMetadataNode:
         assert result["metadata"]["name"] == "test-repo"
         assert result["metadata"]["owner"] == "test-owner"
         assert result["metadata"]["primary_language"] == "Python"
+        assert "languages" in result["metadata"]
+        assert "language_breakdown" in result["metadata"]
         mock_get_metadata.assert_called_once_with("https://github.com/test-owner/test-repo")
+        mock_get_languages.assert_called_once_with("https://github.com/test-owner/test-repo")
+
+    @patch('app.langgraph.nodes.get_repository_languages')
+    @patch('app.langgraph.nodes.get_repository_metadata')
+    def test_extract_metadata_with_multi_language_breakdown(self, mock_get_metadata, mock_get_languages):
+        """Test metadata extraction with multi-language repository."""
+        # Mock response
+        mock_get_metadata.return_value = {
+            "name": "multi-lang-repo",
+            "owner": "test-owner",
+            "size_kb": 3000,
+            "stars": 100,
+            "primary_language": "HTML",
+            "description": "A multi-language repository"
+        }
+
+        # Mock language breakdown with 3 languages
+        mock_get_languages.return_value = {
+            "HTML": 60000,  # 60%
+            "Bash": 40000   # 40%
+        }
+
+        # Create state
+        state: WorkflowState = {
+            "github_url": "https://github.com/test-owner/multi-lang-repo",
+            "generation_id": "test-uuid-123"
+        }
+
+        # Call node
+        result = extract_metadata_node(state)
+
+        # Assertions
+        assert "metadata" in result
+        assert "language_breakdown" in result["metadata"]
+        breakdown = result["metadata"]["language_breakdown"]
+
+        # Should have HTML and Bash in top 3
+        assert len(breakdown) == 2
+        assert breakdown[0]["language"] == "HTML"
+        assert breakdown[0]["percentage"] == 60.0
+        assert breakdown[1]["language"] == "Bash"
+        assert breakdown[1]["percentage"] == 40.0
+
+    @patch('app.langgraph.nodes.get_repository_languages')
+    @patch('app.langgraph.nodes.get_repository_metadata')
+    def test_extract_metadata_with_top_3_languages(self, mock_get_metadata, mock_get_languages):
+        """Test that only top 3 languages are included in breakdown."""
+        # Mock response
+        mock_get_metadata.return_value = {
+            "name": "poly-lang-repo",
+            "owner": "test-owner",
+            "size_kb": 5000,
+            "stars": 200,
+            "primary_language": "Python",
+            "description": "A polyglot repository"
+        }
+
+        # Mock language breakdown with 5 languages
+        mock_get_languages.return_value = {
+            "Python": 50000,      # 50%
+            "JavaScript": 30000,  # 30%
+            "TypeScript": 10000,  # 10%
+            "CSS": 5000,          # 5%
+            "HTML": 5000          # 5%
+        }
+
+        # Create state
+        state: WorkflowState = {
+            "github_url": "https://github.com/test-owner/poly-lang-repo",
+            "generation_id": "test-uuid-123"
+        }
+
+        # Call node
+        result = extract_metadata_node(state)
+
+        # Assertions
+        breakdown = result["metadata"]["language_breakdown"]
+
+        # Should only have top 3
+        assert len(breakdown) == 3
+        assert breakdown[0]["language"] == "Python"
+        assert breakdown[0]["percentage"] == 50.0
+        assert breakdown[1]["language"] == "JavaScript"
+        assert breakdown[1]["percentage"] == 30.0
+        assert breakdown[2]["language"] == "TypeScript"
+        assert breakdown[2]["percentage"] == 10.0
+
+    @patch('app.langgraph.nodes.get_repository_languages')
+    @patch('app.langgraph.nodes.get_repository_metadata')
+    def test_extract_metadata_with_no_languages(self, mock_get_metadata, mock_get_languages):
+        """Test metadata extraction when no language data available."""
+        # Mock response
+        mock_get_metadata.return_value = {
+            "name": "no-lang-repo",
+            "owner": "test-owner",
+            "size_kb": 500,
+            "stars": 5,
+            "primary_language": None,
+            "description": "Empty repository"
+        }
+
+        # Mock empty language breakdown
+        mock_get_languages.return_value = {}
+
+        # Create state
+        state: WorkflowState = {
+            "github_url": "https://github.com/test-owner/no-lang-repo",
+            "generation_id": "test-uuid-123"
+        }
+
+        # Call node
+        result = extract_metadata_node(state)
+
+        # Assertions
+        assert "metadata" in result
+        assert result["metadata"]["languages"] == {}
+        assert result["metadata"]["language_breakdown"] == []
 
 
 class TestSelectFilesNode:
