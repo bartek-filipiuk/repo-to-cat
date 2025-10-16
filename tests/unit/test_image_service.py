@@ -296,8 +296,14 @@ class TestMapAnalysisToAttributes:
 class TestCreateImagePrompt:
     """Test image prompt generation."""
 
-    def test_creates_prompt_with_all_attributes(self):
+    def test_creates_prompt_with_all_attributes(self, monkeypatch):
         """Test that prompt includes all cat attributes."""
+        # Mock add_creative_spice to return base prompt unchanged
+        def mock_spice(base_prompt, quality_score):
+            return base_prompt
+
+        monkeypatch.setattr("app.services.image_service.add_creative_spice", mock_spice)
+
         cat_attrs = {
             "size": "medium",
             "age": "adult",
@@ -315,8 +321,14 @@ class TestCreateImagePrompt:
         assert "happy" in prompt.lower() or "happily" in prompt.lower()
         assert "snakes" in prompt.lower()
 
-    def test_prompt_includes_beauty_modifiers_for_high_score(self):
+    def test_prompt_includes_beauty_modifiers_for_high_score(self, monkeypatch):
         """Test that high beauty score includes positive modifiers."""
+        # Mock add_creative_spice
+        def mock_spice(base_prompt, quality_score):
+            return base_prompt
+
+        monkeypatch.setattr("app.services.image_service.add_creative_spice", mock_spice)
+
         cat_attrs = {
             "size": "medium",
             "age": "adult",
@@ -331,8 +343,14 @@ class TestCreateImagePrompt:
         # Should include positive descriptors
         assert any(word in prompt.lower() for word in ["beautiful", "well-groomed"])
 
-    def test_prompt_includes_beauty_modifiers_for_low_score(self):
+    def test_prompt_includes_beauty_modifiers_for_low_score(self, monkeypatch):
         """Test that low beauty score includes appropriate modifiers."""
+        # Mock add_creative_spice
+        def mock_spice(base_prompt, quality_score):
+            return base_prompt
+
+        monkeypatch.setattr("app.services.image_service.add_creative_spice", mock_spice)
+
         cat_attrs = {
             "size": "small",
             "age": "kitten",
@@ -347,8 +365,14 @@ class TestCreateImagePrompt:
         # Should include descriptors for lower quality
         assert any(word in prompt.lower() for word in ["scruffy", "disheveled", "ordinary"])
 
-    def test_prompt_for_kitten_small_size(self):
+    def test_prompt_for_kitten_small_size(self, monkeypatch):
         """Test prompt generation for small kitten."""
+        # Mock add_creative_spice
+        def mock_spice(base_prompt, quality_score):
+            return base_prompt
+
+        monkeypatch.setattr("app.services.image_service.add_creative_spice", mock_spice)
+
         cat_attrs = {
             "size": "small",
             "age": "kitten",
@@ -363,8 +387,14 @@ class TestCreateImagePrompt:
         assert "kitten" in prompt.lower() or "small" in prompt.lower()
         assert "coffee" in prompt.lower()
 
-    def test_prompt_for_chonker_senior(self):
+    def test_prompt_for_chonker_senior(self, monkeypatch):
         """Test prompt generation for large senior cat."""
+        # Mock add_creative_spice
+        def mock_spice(base_prompt, quality_score):
+            return base_prompt
+
+        monkeypatch.setattr("app.services.image_service.add_creative_spice", mock_spice)
+
         cat_attrs = {
             "size": "very_large",
             "age": "senior",
@@ -380,8 +410,14 @@ class TestCreateImagePrompt:
         assert "senior" in prompt.lower() or "wise" in prompt.lower()
         assert "gophers" in prompt.lower() or "mountains" in prompt.lower()
 
-    def test_prompt_includes_photorealistic_instruction(self):
+    def test_prompt_includes_photorealistic_instruction(self, monkeypatch):
         """Test that prompt includes quality/realism instructions."""
+        # Mock add_creative_spice
+        def mock_spice(base_prompt, quality_score):
+            return base_prompt
+
+        monkeypatch.setattr("app.services.image_service.add_creative_spice", mock_spice)
+
         cat_attrs = {
             "size": "medium",
             "age": "adult",
@@ -394,10 +430,16 @@ class TestCreateImagePrompt:
         prompt = create_image_prompt(cat_attrs)
 
         # Should include quality instructions
-        assert any(word in prompt.lower() for word in ["photorealistic", "detailed", "quality"])
+        assert any(word in prompt.lower() for word in ["photorealistic", "detailed", "quality", "cinematic"])
 
-    def test_prompt_is_non_empty_string(self):
+    def test_prompt_is_non_empty_string(self, monkeypatch):
         """Test that prompt is a non-empty string."""
+        # Mock add_creative_spice
+        def mock_spice(base_prompt, quality_score):
+            return base_prompt
+
+        monkeypatch.setattr("app.services.image_service.add_creative_spice", mock_spice)
+
         cat_attrs = {
             "size": "medium",
             "age": "adult",
@@ -411,6 +453,31 @@ class TestCreateImagePrompt:
 
         assert isinstance(prompt, str)
         assert len(prompt) > 0
+
+    def test_creative_spice_is_called(self, monkeypatch):
+        """Test that add_creative_spice is called during prompt generation."""
+        spice_called = []
+
+        def mock_spice(base_prompt, quality_score):
+            spice_called.append(True)
+            return f"{base_prompt} (enhanced)"
+
+        monkeypatch.setattr("app.services.image_service.add_creative_spice", mock_spice)
+
+        cat_attrs = {
+            "size": "medium",
+            "age": "adult",
+            "beauty_score": 7.0,
+            "expression": "neutral",
+            "background": "snakes and code snippets",
+            "language": "Python"
+        }
+
+        prompt = create_image_prompt(cat_attrs)
+
+        # Verify spice was called
+        assert len(spice_called) == 1
+        assert "(enhanced)" in prompt
 
 
 # ============================================================================

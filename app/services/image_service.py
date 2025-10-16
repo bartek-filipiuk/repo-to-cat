@@ -148,6 +148,78 @@ def map_analysis_to_cat_attributes(
 
 
 # ============================================================================
+# Function 1.5: Add Creative Spice
+# ============================================================================
+
+def add_creative_spice(base_prompt: str, quality_score: float) -> str:
+    """
+    Enhance base image prompt with creative, cinematic details using LLM.
+
+    Adds stylized elements to cat and makes background more dramatic/cinematic
+    based on code quality score. Uses LLM for maximum creativity.
+
+    Args:
+        base_prompt: Basic cat description (size, breed, expression, background)
+        quality_score: Code quality score (0-10)
+
+    Returns:
+        str: Enhanced prompt with creative details
+
+    Example:
+        >>> base = "A medium, adult Tabby cat with neutral expression, coffee shop background"
+        >>> enhanced = add_creative_spice(base, 8.5)
+        >>> "glowing" in enhanced or "cyber" in enhanced or "dramatic" in enhanced
+        True
+    """
+    from app.providers.openrouter import OpenRouterProvider
+
+    logger.info(f"Adding creative spice to prompt (quality: {quality_score})")
+
+    # Determine environment vibe based on quality
+    if quality_score >= 9:
+        vibe = "epic, majestic, powerful"
+    elif quality_score >= 7:
+        vibe = "professional, elegant, accomplished"
+    elif quality_score >= 5:
+        vibe = "decent, functional, ordinary"
+    elif quality_score >= 3:
+        vibe = "chaotic, messy, concerning"
+    else:
+        vibe = "disaster, apocalyptic, terrible"
+
+    enhancement_prompt = f"""Enhance this cat image prompt with creative, cinematic details:
+
+BASE PROMPT: {base_prompt}
+
+CODE QUALITY VIBE: {vibe} ({quality_score}/10)
+
+Your task:
+1. Add stylized elements to the cat (examples: glowing patterns, geometric shapes, cyber details, ethereal aura, crystalline features, neon accents)
+2. Transform the background into a cinematic, dramatic scene matching the quality vibe
+3. Keep it concise (2-3 sentences total)
+4. Make it movie-like and memorable
+
+Return only the enhanced prompt, nothing else."""
+
+    try:
+        openrouter = OpenRouterProvider()
+        response = openrouter.generate_text(
+            prompt=enhancement_prompt,
+            system_message="You are a creative director for dramatic, cinematic cat portraits. Add creative flair while keeping descriptions concise.",
+            temperature=1.0,  # Maximum creativity
+            max_tokens=150
+        )
+
+        enhanced = response.strip()
+        logger.info(f"Enhanced prompt generated: {enhanced[:100]}...")
+        return enhanced
+
+    except Exception as e:
+        logger.warning(f"Failed to enhance prompt with LLM: {str(e)}, using base prompt")
+        return base_prompt
+
+
+# ============================================================================
 # Function 2: Create Image Prompt
 # ============================================================================
 
@@ -222,17 +294,24 @@ def create_image_prompt(cat_attrs: Dict[str, Any]) -> str:
     else:
         beauty_modifier = "scruffy, disheveled"
 
-    # Construct prompt with breed
-    prompt = (
+    # Construct base prompt with breed
+    base_prompt = (
         f"A {beauty_modifier} {age_desc}, {size_desc} {breed_desc} with a {expression_desc}. "
-        f"Background: {background}. "
-        f"Photorealistic, detailed fur texture, professional photography, 8k quality. "
-        f"The cat should look natural and lifelike."
+        f"Background: {background}."
     )
 
-    logger.info(f"Generated prompt ({breed_key} breed): {prompt[:100]}...")
+    # Add creative spice with LLM
+    enhanced_prompt = add_creative_spice(base_prompt, beauty_score)
 
-    return prompt
+    # Add technical details
+    final_prompt = (
+        f"{enhanced_prompt} "
+        f"Photorealistic, cinematic lighting, dramatic composition, detailed fur texture, 8k quality."
+    )
+
+    logger.info(f"Generated enhanced prompt ({breed_key} breed): {final_prompt[:100]}...")
+
+    return final_prompt
 
 
 # ============================================================================
@@ -415,37 +494,26 @@ FORMAT REQUIREMENTS:
   BOTTOM: [your text]
 
 STYLE GUIDELINES:
-- Energetic programmer humor with internet slang
+- Energetic programmer humor with creative internet slang
 - Reference the actual repository language, name, or code quality
 - Friendly roast tone (funny but not mean)
-- Be creative and unique - avoid repetitive phrases
+- Be HIGHLY CREATIVE - never repeat the same phrases
+- Use varied, unexpected combinations
 
-HUMOR IDEAS (mix and match creatively):
-- Language-specific jokes:
-  * Python: imports, indentation, decorators
-  * JavaScript: undefined, callbacks, dependencies
-  * Rust: borrow checker, memory safety, speed
-  * Go: error handling, goroutines, simplicity
-  * Java: factories, null pointers, enterprise
-  * Shell/Bash: pipes, scripts, automation
-  * HTML: markup, not programming, static
+HUMOR THEMES (be creative, don't copy these literally):
+- Language jokes: Reference language-specific concepts (imports, types, syntax quirks)
+- Code quality: Match the vibe to the score (8+: proud/epic, 6-7: decent, 4-5: messy, <4: disaster)
+- Testing: Has tests = confident/professional, No tests = risky/chaotic
+- Repository specific: Use the actual repo name, owner, or language in creative ways
 
-- Internet slang options (use sparingly, vary it):
-  * Energy: "GO BRRRR", "LETS GOOO", "FR FR"
-  * Status: "LEFT THE CHAT", "ACTIVATED", "NO CAP"
-  * Approval: "BASED", "W", "BUSSIN"
+CREATIVE VARIETY:
+- Mix technical terms with humor
+- Use metaphors and comparisons
+- Play with code concepts (compile, deploy, debug, refactor)
+- Internet culture (but vary it - don't repeat the same slang)
+- Keep it fresh and unexpected
 
-- Code quality jokes:
-  * High quality (8+): proud, clean, professional
-  * Medium (6-7): decent, works, acceptable
-  * Low (4-5): concerning, messy, chaotic
-  * Very low (<4): spaghetti, disaster, help
-
-- Testing jokes:
-  * No tests: "YOLO MODE", "PRODUCTION IS TEST"
-  * Has tests: "TESTED", "COVERED", "CERTIFIED"
-
-IMPORTANT: Be creative! Don't repeat the same phrases. Make each meme unique and context-specific.
+IMPORTANT: Every meme should be UNIQUE. Avoid repeating phrases across generations. Think outside the box!
 
 Generate meme text in this EXACT format:
 TOP: [your creative text here]
